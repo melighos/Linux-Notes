@@ -1,0 +1,179 @@
+Linux boot order(In General):
+1.Boot loader - piece of software started by the BIOS or UEFI. It is responsible for loading the kernel with the wanted kernel parameters, and initial RAM disk based on configuration files.
+2.Kernel - core of an operating system. It functions on a low level (kernelspace) interacting between the hardware of the machine and the programs which use the hardware to run.
+3.initramfs - after the boot loader loads the kernel and possible initramfs files and executes the kernel, the kernel unpacks the initramfs (initial RAM filesystem) archives into the (then empty) rootfs (initial root filesystem, specifically a ramfs or tmpfs). The first extracted initramfs is the one embedded in the kernel binary during the kernel build, then possible external initramfs files are extracted. Thus files in the external initramfs overwrite files with the same name in the embedded initramfs. The kernel then executes /init (in the rootfs) as the first process. The early userspace starts.
+The purpose of the initramfs is to bootstrap the system to the point where it can access the root filesystem.
+4.init process(systemd) - at the final stage of early userspace, the real root is mounted, and then replaces the initial root filesystem. /sbin/init is executed, replacing the /init process.
+5.getty - init calls getty once for each virtual terminal (typically six of them), which initializes each tty and asks for a username and password. Once the username and password are provided, getty checks them against /etc/passwd and /etc/shadow, then calls login. Alternatively, getty may start a display manager if one is present on the system.
+6.Display manager - can be configured to replace the getty login prompt on a tty, in order to automatically initialize a display manager after booting, it is necessary to manually enable the service unit through systemd(or other init system).
+7.Login - login program begins a session for the user by setting environment variables and starting the user's shell, based on /etc/passwd.
+8.Shell - once the user's shell is started, it will typically run a runtime configuration file, such as bashrc, before presenting a prompt to the user. If the account is configured to Start X at login, the runtime configuration file will call startx or xinit.
+9.GUI - xinit runs the user's xinitrc runtime configuration file, which normally starts a window manager. When the user is finished and exits the window manager, xinit, startx, the shell, and login will terminate in that order, returning to getty. 
+
+GRUB(GRand Unified Bootloader) is a multi-boot loader.
+/etc/default/grub
+update-grub (update-grub is a stub for running 'grub-mkconfig -o /boot/grub/grub.cfg "$@"' to generate a grub2 config file), alternatively:
+grub2-mkconfig -o "$(readlink -e /etc/grub2.conf)"  (can be /etc/grub2.cfg, or /etc/grub2-efi.cfg) 
+
+initramfs(initial RAM filesystem) - the initial root filesystem, bootstrap the system to the point where it can access the real root filesystem.
+
+Init - first process started during system boot and continues running until the system is shut down. Started by the kernel using a hard-coded filename.
+Init is the direct or indirect ancestor of all other processes, and automatically adopts all orphaned processes.
+
+udev - device manager for the Linux kernel.
+udev can be used to set up static device names, perform some action on a specific disk device, wake up functionality of a suspend USB device or disabling the wakeup functionality, etc...
+/etc/udev/rules.d/ (udev rules written by the administrator)
+
+Access Control List(ACL) - more flexible permission mechanism for file permissions.
+tune2fs -l /dev/sdXY | grep "Default mount options:" (check if enable for current drives)
+/etc/mke2fs.conf  (default mount options)
+getfacl <file/dir> (show permissions)
+setfacl -m "u:user:permissions" <file/dir> (add permissions for a user)
+setfacl -m "g:group:permissions" <file/dir> (add permissions for a group)
+setfacl -dm "entry" <dir> (newly created files or directories will inherit entries from the parent director)
+setfacl -x "entry" <file/dir> (remove a specific entry)
+setfacl -b <file/dir> (remove all entries)
+
+LVM(logical volume manager) - manages disk drives and similar mass-storage devices
+
+rsyslog - syslog implementation that offers many benefits. It can be configured to receive log entries from systemd's journal
+in order to process or filter them before quickly writing them to disk or sending them over network.
+/etc/rsyslog.conf
+/etc/rsyslog.d/50-default.conf  (Default rules for rsyslog)
+/etc/rsyslog.d/custom.conf (you can add custom conf files for creating additional log files)
+logrotate - allows for the automatic rotation compression, removal and mailing of log files.
+/etc/logrotate.conf
+/etc/logrotate.d/mylogconf
+
+Cron - time-based job scheduler in Unix-like computer operating systems.
+/etc/crontab (system-wide cron config)
+/etc/cron.d (folder for system-wide cron jobs)
+/etc/cron.hourly(cron.daily, cron.weekly, cron.monthly) (system-wide jobs used by anacron)
+/etc/cron.allow (cron user whitelist)
+/etc/cron.deny (cron user blacklist(better to use whitelist))
+/var/spool/cron/crontabs (place where kept users cron jobs)
+min(0-59) hour(0-23) dom(1-31) month(1-12) dow(0-6 or 1-7)
+*/30 * * * * user /path/to/script (every half hour)
+0 8,10,12,14 * * * user /path/to/script (every day at 8am, 10am, 12am, 2pm)
+0 8 * * 2 user /path/to/script (every Tuesday at 8am)
+0 23 1-7 * 3 user /path/to/script (first Wednesday of each month at 11pm)
+
+D-Bus - message bus system that provides an easy way for inter-process communication.
+
+Kernel module - pieces of code that can be loaded and unloaded into the kernel upon demand. A module can be configured as built-in or loadable. To dynamically load or remove a module, it has to be configured as a loadable module in the kernel configuration. 
+/lib/modules/kernel_release     (stored Modules)
+/etc/modules-load.d             (Kernel modules explicitly loaded during boot)
+/proc/modules                   (loaded module list)
+/etc/modprobe.d/                (directory can be used to pass module settings to udev)
+/etc/modprobe.d/                (Can be used for Blacklisting)
+(find /lib/modules/$(uname -r) -type f -name '*.ko*')
+
+tmpfs - temporary filesystem that resides in memory and/or swap partition(s).
+
+FUSE - Filesystem in Userspace, is a software interface for Unix and Unix-like computer operating systems that lets non-privileged users create their own file systems without editing kernel code. This is achieved by running file system code in user space while the FUSE module provides only a "bridge" to the actual kernel interfaces.
+bindfs is a FUSE filesystem for mounting a directory to another location. 
+
+Core dump - file containing a process's address space (memory) when the process terminates unexpectedly, may be produced on-demand, or automatically upon termination. Triggered by the kernel in response to program crashes, and may be passed to a helper program (such as systemd-coredump) for further processing.
+cat /proc/sys/kernel/core_pattern  (where automatic core dumps go)
+/var/lib/systemd/coredump (possible core dumps location)
+
+Network configuration:
+/sys/class/net (network interfaces names)
+/etc/network/interfaces (network interfaces configuration)
+
+DNS - Domain Name System
+/etc/resolv.conf
+/etc/resolvconf/resolv.conf.d/head (File to be prepended to the dynamically generated resolver)
+/etc/resolvconf/resolv.conf.d/tail (File to be appended to the dynamically generated resolver)
+resolvconf -u (should be run after changes to /resolv.conf.d/head or tail)
+/etc/dnsmasq.conf 
+
+NetworkManager - program for providing detection and configuration for systems to automatically connect to networks.
+/etc/NetworkManager/system-connections/* (Stored Connections file)
+nmcli connection reload (should be run after changes to connection config file)
+/etc/NetworkManager/NetworkManager.conf (global configuration file, can be used to set DNS)
+/etc/NetworkManager/dispatcher.d/
+
+Samba - re-implementation of the SMB networking protocol.
+/etc/samba/smb.conf (Samba configuration file)
+
+PAM - Pluggable Authentication Modules, provide a framework for system-wide user authentication.
+PAM provides a way to develop programs that are independent of authentication scheme. 
+These programs need "authentication modules" to be attached to them at run-time in order to work. 
+Which authentication module is to be attached is dependent upon the local system setup and is at the discretion of the local system administrator.
+PAM is dynamically linked at runtime, login application is pam-aware and must, therefore, have a policy.
+/etc/security (contains system-specific configuration for variables the authentication methods offer)
+/etc/pam.d/ (PAM configuration to link the applications to the individual systems' authentication schemes)
+
+CUPS - standards-based, open source printing system.
+
+SSH - secure shell, an encrypted protocol used to administer and communicate with servers.
+etc/ssh/sshd_config (config for ssh server)
+~/.ssh/authorized_keys (in that file, public key needs to be concatenated on remote server)
+ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
+ssh-agent - program which caches your decrypted private keys and provides them to SSH client programs on your behalf.
+
+MTP - Media Transfer Protocol
+If you use gvfs, then mtp devices can be found in file manager under:
+/run/user/$UID/gvfs/mtp* or /var/run/user/$UID/gvfs/
+For manual detect and connect(mtp-tools, mtpfs and libmtp needed):
+mtp-detect (detect your device)
+mtp-connect (connect to your mtp device)
+mtp-folders (contained folders and their IDs)
+mtp-files (files in your device and their IDs)
+mtp-getfile "File ID" "Parent ID"/filename (copy a file from the device to your computer("Parent ID" - folder where the file resides))
+mtp-sendfile (sending a file from your computer to your device)
+
+GnuPG - allows you to encrypt and sign your data and communication.
+addgnupghome user1 user2 (GnuPG home directories for existing users)
+gpg --gen-key  (Generate a key pair)
+gpg --list-keys  (list keys in your public key ring)
+gpg --list-secret-keys (list keys in your secret key ring)
+gpg --recipient user-id --encrypt file (encrypt a file using key)
+gpg -c file (encrypt data with a passphrase)
+gpg --output doc --decrypt file.gpg (decrypt)
+
+chroot - operation that changes the apparent root directory for the current running process and their children. A program that is run in such a modified environment cannot access files and commands outside that environmental directory tree.
+A chroot is a way to isolate a process and its children from the rest of the system. It should only be used for processes that don't run as root, as root users can break out of the jail very easily.
+Using a bind mounts is a great way to populate the chroot tree. Using that, you can pull in folders like /lib and /usr/lib while not pulling in /usr, for example. Just bind the directory trees you want to directories you create in chroot tree.
+Uses:
+Reinstalling the bootloader.
+Rebuilding the initramfs image.
+Upgrading or downgrading packages.
+Resetting a forgotten password.
+Isolating insecure and unstable applications.
+To create a test environment.
+Building packages in a clean chroot.
+
+bind mount - mounting creates a view of a storage device as a directory tree. A bind mount instead takes an existing directory tree and replicates it under a different point. The directories and files in the bind mount are the same as the original. Any modification on one side is immediately reflected on the other side, since the two views show the same data.
+A Linux bind mount is mostly indistinguishable from the original. The command df -T /else/where shows the same device and the same filesystem type as df -T /some/where. The files /some/where/foo and /else/where/foo are indistinguishable, as if they were hard links. It is possible to unmount /some/where, in which case /else/where remains mounted.
+If there are mount points under /some/where, their contents are not visible under /else/where. Instead of bind, you can use rbind, also replicate mount points underneath /some/where.
+In addition, Linux allows mounts to be declared as shared, slave, private or unbindable. This affects whether that mount operation is reflected under a bind mount that replicates the mount point.
+
+LXC - operating-system-level virtualization method for running multiple isolated Linux systems (containers) on a single control host (LXC host).
+It does not provide a virtual machine, but rather provides a virtual environment that has its own CPU, memory, block I/O, network, etc. space and the resource control mechanism.
+/etc/lxc/default.conf (default config)
+/etc/lxc/containername/config (specific container config)
+
+Process Priority and Nice value:
+Nice(NI) value is a user-space and priority(PR) is the process's actual priority that use by Linux kernel.
+PR -- Priority. The scheduling priority of the task. If you see 'rt' in this field, it means the task is running under 'real time' scheduling priority.
+NI -- Nice Value. The nice value of the task. A negative nice value means higher priority, whereas a positive nice value means lower priority.
+PR = 20 + NI
+NI value is just a suggestion to kernel, kernel sometimes ignore it.
+Priorities range from 0 to 139 in which 0 to 99 for real time and 100 to 139 for users.
+Nice value range is -20 to +19 where -20 is highest, 0 default and +19 is lowest.
+
+What start a process:
+You can also look directly at /proc/<pid>/exe, which may be a symlink to the appropriate executable. 
+All, in all, the files in /proc will provide all information about a program:
+'exe' will be a link to executable. 
+'cwd' to current working directory. 
+'fd' directory contains links to currently open files (including standard input, output and error).
+'fdinfo' contains one file corresponding to each open file, which tells you the current position for reading or writing.
+For different process info, look in to the 'status'.
+
+rsync - 
+The rsync protocol can easily be used for backups. Rsync must be installed on both the source and the destination machine
+Network file transfers use the SSH protocol by default and host can be a real hostname or a predefined profile/alias from .ssh/config.
+

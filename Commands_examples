@@ -1,0 +1,311 @@
+Ctrl+alt+F1-F6 (command line shells)
+Ctrl+alt+F7 (GUI shell)
+Alt+SysRg+b - reboot
+Alt+SysRg+o - shutdown
+
+sudo !! - re-run previous command with 'sudo' prepended
+ctrl-w (cut word behind cursor)
+ctrl-k (cut all in front of cursor)
+ctrl-u (cut all behind cursor)
+ctrl-y (past)
+ctrl + alt + - (undo)
+ctrl-x-e - continue editing your current shell line in a text editor (uses $EDITOR)
+alt-. - paste previous command's argument
+!$ - last argument in last command
+Ctrl+z (suspend and move process to background)
+CTRL+a (move to the beginning of a command (while typing))
+CTRL+e (move to the end of the command (while typing))
+CTRL+r (reverse history search)
+CTRL+s (forward history search)
+------------------------------------------------------------------------------------
+Memory modules characteristics:
+sudo apt-get install i2c-tools
+sudo modprobe eeprom
+decode-dimms                #if error then
+sudo i2cdetect -l           #look for SMBus, if not present then
+sudo modprobe "i2c-i801"    #SMBus adapter name taken from lspci(PCI/SMBus)
+sudo i2cdetect -l
+decode-dimms
+----------------------------------------------------------------------------
+echo low > /sys/class/drm/card0/device/power_profile (changing power profile)
+upower -i /org/freedesktop/UPower/devices/battery_BAT1 (battery info)
+cat sys/class/power_supply/BAT1/* (battery info)
+acpi -V (battery info(not default))
+--------------------------------------------------------------------------------------
+LANGUAGE=ru_RU "program" (change LANGUAGE env. variable for specific program)
+LANG=ru_RU.UTF-8 "program" (change LANG env. variable for specific program)
+
+locale-gen (generate locales for languages specified in /etc/locale.gen)
+update-locale --reset LANG=en_US.UTF-8 (updete and reset locale settings)
+
+cat /usr/share/i18n/SUPPORTED (list of all supported locales)
+cat /etc/locale.gen (list for locales to generate used by "locale-gen" command)
+------------------------------------------------------------------------------------
+git ls-files | sort -r | xargs rename 's/findme(?!.*\/)\/?$/replaceme/g' '{}' (Rename lookahead workaround for recursive copy)
+pax -rw -pe -s/2015/2016/ source/ target/  (utility to copy a directory tree or create or unpack an archive)
+git diff -D --no-index dir1/ dir2/ (difference between two directories)
+cat file.txt | tee -a log.txt | cat > /dev/null (append text to log file)
+
+xinput --list (list input devises)
+xinput --list-props 'id' (avaliable parameters for device id)
+xinput --set-prop 'id' 'param' 'value' (set parameters for this dev id)
+xinput --query-state 'id' (current state of different variables for this device id)
+
+shutdown -Fr now (Force the filesystem check during reboot)
+
+kill -15 `lsof -t -u USER` (terminate all the processes for a specific user)
+------------------------------------------------------------------------------------------
+# /etc/fstab (for persistent bind mounts)
+/some/where               /else/where              none    bind    0 0
+/some/where               /readonly/       view    none    bind,ro
+
+Using bindfs to remap user IDs:
+mkdir -p /root/private/alice_disk /media/alice_disk
+chmod 700 /root/private
+mount /dev/sdb1 /root/private/alice_disk
+bindfs --map=1000/1001:1001/1000:@1000/1001:@1001/1000 /root/private/alice_disk /media/alice_disk
+
+mount another user's folder and files as my own ,transformations of ownership and permissions:
+bindfs -u cqqrstoo ~bob/stuff ~cqqrstoo/bobs-stuff
+# In /etc/fstab, that would translate to:
+bindfs#/home/bob/stuff /home/cqqrstoo/bobs-stuff fuse force-user=cqqrstoo 0 0
+-------------------------------------------------------------------------------
+apt install --install-recommends "package" (install recommended packages additionally to one in question)
+apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
+apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
+apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
+
+dpkg-query -W -f='${Conffiles}\n' '*' | awk 'OFS="  "{print $2,$1}' | LANG=C md5sum -c 2>/dev/null | awk -F': ' '$2 !~ /OK$/{print $1}' | sort | less (show managed configuration files which have been changed from the default)
+debsums -ce (show managed configuration files which have been changed from the default)
+
+<packeges>=`sudo dpkg --get-selections | grep <name> | cut -f 1` (restore packages and files these packages created to its defaults)
+
+grep -l /etc/ssh/sshd_config /var/lib/dpkg/info/*.postinst(or preinst) (search through the maintainer scripts to see what creates file)
+dpkg-deb --fsys-tarfile openssh-client_*.deb | sudo tar x ./etc/ssh/ssh_config (extract file from .deb package)
+
+zgrep ' install' /var/log/dpkg.log* (installed packages list)
+
+wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+--------------------------------------------------------------------------------------------------------------------
+find . -type f -name "*.txt" -exec sed -i'' -e 's/old/new/g' {} + (replace every occurrence of 'old' with 'new' recursively)
+find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/old/new/g' (same but different method)
+
+find . -type f -printf '%s %p\n'| sort -nr (List of files sorted by size)(| head -10 - can be added optionally to cut output)
+find \( ! -uid `id -u` \) -o \( ! -gid `id -g` \) (find folders and files you don't own)
+
+find . -iname "*_b.wav" -exec rename 's/_b.wav/.wav/' '{}' \; (rename files recursively, -iname - case in-sensitive)
+
+find . -type d -print0 | while read -d '' -r dir; do files=("$dir"/*); printf "%5d files in directory %s\n" "${#files[@]}" "$dir"; done  (number of files, recursively)
+
+find . -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" " (last modified files)
+find /etc/ -type f -mmin -$((60*24)) -exec ls -halt {} +  (list modified files)
+
+find . -maxdepth 1 -type f -delete (maxdepth - depth of search, delete - delete found files)
+find . -type d -name "name" -exec rm -rv {} + (delete folders recursively)
+find . -type f -not -name 'smart' -delete (-not - exclude)
+
+find -name "*.txt" -not -path "*/folder1/*" -not -path "*/folder2/*" (exclude folders from search)
+
+find / -inum 517333 (retrieve all filenames which point to an inode number)
+
+sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
+
+cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
+cp -p file1 file2 (preserving the mode, ownership and timestamp)
+-------------------------------------------------------------------------------------------------------------------
+touch -c -t 201212101830.55 "file" (changing file mod time)
+touch -d "2017-09-16 00:00:01" "file" (changing file mod time)
+
+cut -d ':' -f1,2 filename (cut file or program output,-d - delimiter,-f - field(s) to be displayed)
+
+awk 'condition { action }' filename
+awk 'pattern { action }' filename
+awk -F: '{print $1; print $3}' filename (print the first and third field(-F - field-separator where ":" - delimiter))
+awk '{ $1=""; $2=""; print}' filename (skip first two fields and print the rest)
+awk '/AAA|BBB|CCC/' filename (lines that match any of "AAA" or "BBB", or "CCC")
+awk -F":" '{if ($2)print $2}' filename (print only output if the second field exists and is not empty)
+awk '$1 == "word" {print $0}' filename (If field match then print the entire line)
+awk '$1 != "word" {print}' filename (Print lines where field is NOT equal to "word")
+awk '$1 ~ /regex/ {print}' filename (Print line if field matches regex in file)
+awk '$1 !~ /regex/ {print}' filename (Print line if field does NOT match regex in file)
+awk '$1 ~ /^hello$/{ print $3; }' filename (^ means $1 start, and $ is $1 end)
+awk 'NR==52 { print; exit }' filename (print line number 52 and exit)
+awk 'NR==8,NR==12' filename (Print lines 8 to 12 (inclusive))
+awk 'NR!=1{print $1}' filename (Print first field for each record in file excluding the first record)
+awk '/foo/{n++}; END {print n+0}' filename (Print total number of lines that contain foo)
+awk 'length > 32' filename (Print lines with more than 32 characters in file)
+awk '$1 > 200' filename (print lines with value greater than 200 in first fild)
+awk '/regex/,0' filename (section of file from regular expression to end of file)
+awk '/start/,/stop/' filename (Print section of a file between two regular expressions (inclusive))
+awk '/regexp a/{print};/regexp b/{printf $0}' filename (lines matching "regexp a" and lines matching "regexp b" but the later ones are printed without newline)
+awk -F":" '/regexp/{print $2;next}{print $3}' filename (Print field number two only on lines matching "regexp" otherwise print field number three)
+awk '{total += $1}END{ print total}' filename (add numbers from specific field and print total)
+awk '{total += $8}END{size=  total / 1024; printf "process total size %.2f MB\n", size}' (print process used memory)
+awk 'BEGIN {count=0}; $4 ~ /regex/ {count++};END{print "some text =",count}' filename
+
+'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
+utility 2>&1 | tee output.log (redirect STDERR to STDOUT, both streams will be piped to the tee, data would be saved to file and reproduced in the console)
+utility 2>&1 >/dev/null | more_stuff (redirect STDERR to STDOUT, will detach error messages from STDOUT and pipped them forward)
+
+ps -aux | grep Z/R/S (find process by status, Z - zombie process)
+ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
+--------------------------------------------------------------------------------------------------------------------
+grep -Rv "word_to_be_ignored" /where/to/search/ | grep "word_to_be_searched" (-R - recursive, -v - exclude)
+grep -E "word1|word2|word3" (multiple word search)
+grep -P '(?!.*unwanted_word)keyword' /path/to/file (find only sun, exclude sunrise)
+grep -r --exclude="file" /where/to/search/ (exclude file)
+grep -r --exclude-dir=var "pattern" /where/to/search/ (exclude dir)
+grep  "word" -C 5/-A 5/-B 5 (-A number of lines to show after matching line, -B before, -C before and after)
+grep -A4 -B4 'yyyy-mm-dd' /path/to/file
+
+egrep "(pattern1|pattern2|...)" somefile (multiple pattern grep)
+egrep --color "pattern1|pattern2|$" (colorized multiple pattern grep)
+
+grep -a -C 200 -F 'string' /dev/sdXN > OutputFile (find deleted plain text files on a hard drive by directly searching on the block device, unique string from the file you are trying to recover is needed, -C 200 - lines before and after each match of the string)
+------------------------------------------------------------------------------------------------------------
+journalctl -p 3 (systemd journal, specified priority, 0 emerg, 1 alert , 2 crit, 3 err, 4 warning, 5 notice, 6 info, 7 debug)
+journalctl --list-boots (list known boots)
+journalctl -b -2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
+journalctl --since "2015-01-10 17:15:00" --until "2015-01-11 03:00" (show messages in requested time limits)
+journalctl -u 'nginx.service' (log messages for specified service)
+journalctl _PID=8088 (log entries that involve specified PID)
+journalctl _UID=x/_GID=x (log entries that involve specified user/group)
+journalctl /bin/bash (log entries that involve executable)
+
+timedatectl set-timezone 'zone' (set timezone for systemd jurnalctl)
+timedatectl status (current timezone status for systemd log)
+-----------------------------------------------------------------------------------------
+Nmap:
+nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
+nmap -vvv -sC -Pn -O(-A) hostname (-sC=load default scripts,-Pn=skip ping probe,-O(A)=operating system and services)
+nmap -p port host (test port status)
+nmap -f hostname (host port status)
+nmap "-sn" -oX /path/to/hosts.xml --stylesheet=nmap.xls "host" (create report with results to file)
+nmap --open (only report open ports)
+nmap --reason (why port closed/filtered, etc...)
+nmap --mtu 8/16/32/64 "host" (specify packets size)
+nmap -D RND:10 "host" (use decoy source hosts for scanning)
+nmap --source-port "port" "target host" (use specific port)
+nmap --script vulscan,vulners -sV HOST (run nmap scripts for finding vulnerabilities)
+
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-ports 8080 (incoming packets going to port 80 will be redirected to port 8080)
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE (NAT)
+
+ssh -L 1234:localhost:2812 remoteuser@remotehost (bind remote port(2812) with our local port(1234)(-L - local forwarding))
+ssh -N -D 'local_port' user@host -p 'remote_port' (tunnel with ssh, -N - don't login, -D - bind to local port(8080))
+
+lsof:
+lsof -i :'port/tcp/udp' (which process is listening on port or protocol)
+lsof -i -P -n (established connections, ports in use)
+lsof -p [PID] -R (opened files based on process PID, -R - show PPID)
+lsof -u USER (list files opened by processes belonging to a specific user)
+lsof -t filename (list IDs of processes that have opened a particular file)
+lsof +D /path/to/directory (list all open files under a specific directory)
+lsof /proc or /home (list open files of specific file system or mount point)
+lsof /var/log | grep -i "deleted" (pid of files which were deleted but they are still exist in the system in deleted state)
+lsof /dev/DEVICE (list all open files for specific device)
+
+NetworkManager:
+nmcli dev show (current connection details)
+nmcli device (list of network devices and their state)
+nmcli connection show (list of connections, list of UUIDs)
+nmcli device wifi list (list nearby wifi networks)
+nmcli device wifi connect SSID password password (connect to a wifi network)
+nmcli radio wifi off/on (turn off/on wifi)
+nmcli connection up uuid UUID (reconnect an interface marked as disconnected)
+nmcli device disconnect ifname eth0 (disconnect an interface)
+nmcli connection edit 'Wired connection 2' (nmcli interactive editor to edit a connection)
+
+mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
+
+tcpdump -D (real and virtual interfaces)
+tcpdump -i "interface" -nnvvS (network activity monitoring(-nn - Don't resolve hostnames or port names,-S - absolute-tcp-sequence-numbers))
+tcpdump -i "interface" -vvnne (-e - show any link layer information)
+tcpdump -i "interface" -vvnn host IP_ADDR (capture all traffic to and from specific host)
+tcpdump -i "interface" -vvnn net 10.0 (capture from a specific subnet, aka 10.0.x.x)
+tcpdump -i "interface" -vvnn net 172.16.0.0/16 (same as above)
+tcpdump -i "interface" -vvnn tcp port 80 (captures using the specified port)
+tcpdump -i "interface" -vvnn proto \\icmp (captures using the specified protocol)
+tcpdump -i "interface" -n vlan 100 (show tagged VLAN traffic)
+tcpdump -i "interface" not and or (not - negating a filter match, and/or - combining filters)
+-----------------------------------------------------------------------------------
+For open-source radeon and amdgpu driver:
+DRI_PRIME=1 %command% (make program to use another GPU)
+
+GALLIUM_HUD="fps,GPU-load+cpu" (overlay with different information)
+GALLIUM_HUD=help glxgears (available options list)
+GALLIUM_HUD="fps,GPU-load+cpu,VRAM-usage,sensors_temp_cu-pch_wildcat_point-virtual-0.temp1,sensors_temp_cu-radeon-pci-0d00.temp1"
+
+GRUB_CMDLINE_LINUX_DEFAULT="radeon.cik_support=0 amdgpu.cik_support=1 radeon.si_support=0 amdgpu.si_support=1" (experimental amdgpu support)
+
+export MESA_GL_VERSION_OVERRIDE=3.3COMPAT (overrides env variable for compatiblity OpenGL version)
+
+cat /sys/kernel/debug/vgaswitcheroo/switch (GPUs power and connected output statuses)
+---------------------------------------------------------------------------------------
+Compiling:
+./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))
+make -j4 (execute make to compile the source code, "-j#" - starting several compiler "jobs" simultaneously)
+make clean (removes existing binaries that were from a previous build)
+make install (install the binaries that the compiler created)
+checkinstall (create a package from binaries to register the software with the Debian package tool)
+-------------------------------------------------------------------------------------------------
+Git:
+git clone "url" (clone git project from web)
+git init (create git database in current directory)
+git status (git status for current directory)
+git add hello.html (Staging the changes to file)
+git add -A (stage all repository changes)
+git checkout hello.html (Discarding local changes (before staging))
+git reset HEAD hello.html (cancel staged changes)
+git commit -m 'comment' (commit staged changes)
+git commit --amend -m 'comment' (change the previous commit)
+git revert HEAD --no-edit (create a commit that deletes the changes saved by unwanted commit)
+git reset --hard <hash> (changes the branch pointer to point at any commit in the tree)
+git log --all (see git log)
+git log --pretty=oneline (single line format)
+git remote add "name" "url" (add remote repository to local git database)
+git push -u "name" (push changes to new remote repository, or to new branch)
+git push (push changes to remote repository)
+git pull (pull changes from remote repository)
+git branch (show current branch)
+git branch -a (show all branches)
+git checkout <hash> (checkout previous snapshot)
+git checkout -b "branch_name" (add new branch)
+git checkout "branch_name" (switch to another branch)
+git merge "branch_name" (merge current branch in to another branch)
+
+git config --global user.name "Your Name" (set up your name)
+git config --global user.email "your_email@whatever.com" (set up your e-mail)
+git config --global diff.tool "Program Name" (set up your diff tool(git difftool))
+git config --global merge.tool "Program Name" (set up your merge tool(git mergetool))
+----------------------------------------------------------------------------------------
+udev:
+udevadm info -a -n /dev/sda (List the attributes of a device)
+udevadm info -a -p /sys/class/backlight/intel_backlight (list all attributes of a specific system path)
+udevadm monitor --environment --udev (monitor environment variables while unplugging your device)
+udevadm test $(udevadm info -q path -n device_name) 2>&1 (testing rules before loading, it will not perform all actions in your new rules but it will however process symlink rules on existing devices)
+udevadm test /sys/class/backlight/acpi_video0/ (test the udev rule for specific device/system path)
+udevadm control --reload (If rules fail to reload automatically)
+--------------------------------------------------------------------------------------------------
+LXC:
+lxc-ls -f (list all installed LXC containers)
+lxc-create -n CONTAINER_NAME -t download -- --dist 'supported_distributive_name' --release current --arch amd64 (create new LXC container)
+lxc-start/lxc-stop -n CONTAINER_NAME (start/stop container)
+lxc-console -n CONTAINER_NAME (login into a container)
+lxc-attach -n CONTAINER_NAME --clear-env (attach to a container)
+lxc-copy -n CONTAINER_NAME -N snap1 -B overlayfs -s (create snapshot of a specific container, which we will call "snap1")
+lxc-attach -n CONTAINER_NAME --clear-env -- sudo -u YOURUSER env DISPLAY=:0 PROGRAM_NAME (running Xorg programs)
+
+--------------------------------------------------------------------------
+rsync:
+rsync -a --delete --quiet /folder/to/backup /location/of/backup (-a - archived and syncs recursively)
+rsync -a --delete local-file user@remote-host:remote-file (--delete - delete from destination if removed from source)
+rsync -a --exclude=pattern_to_exclude user@remote-host:remote-file local-file
+rsync -a --delete --quiet -e ssh /folder/to/backup user@host:/location/of/backup (-e ssh - use ssh)
+
+rsync -P (-r) source destination (transferring and synchronizing local files)
+rsync -ve ssh source user@host:destination - transferring and synchronizing remote files(-u - ignore same files)
+rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file - download from a server
+rsync -avH /home/user/path/to/file -e ssh user@server:/path/to/file - upload to a server
+rsync -a --include '*/' --include '*.txt' --exclude '*' source/ target/  (Copy specific file type keeping the folder structure)
+
