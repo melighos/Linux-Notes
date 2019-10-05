@@ -11,6 +11,7 @@ xinput (input devises info and settings)
 powerstat (Power Consumption Calculator for laptop)(not default)
 cat /sys/firmware/efi/fw_platform_size (UEFI firmware bitness)
 efibootmgr (EFI boot priority order)
+cat /sys/kernel/debug/vgaswitcheroo/switch (GPUs power and connected output statuses)
 
 Audio:
 lspci -v | grep -i audio
@@ -92,6 +93,7 @@ dhclient -v "interface" (request new dhcp address)
 nmcli (comandline too for NetworkManager)
 tmux (terminal multiplexer, shared sessions(need install))
 curl -Iv https://www.site.com/ or 'ip address:port' (transfer data from or to a server to test connectivity)
+iptables (command line utility for configuring Linux kernel firewall)
 
 Security:
 getent passwd/group (list users/group)
@@ -242,84 +244,6 @@ set (all shell variables, environmental variables, local variables, and shell fu
 ldd /path/to/binary/ (print shared library dependencies of the program)
 whereis "command" (locates the binary, source and manual files for the specified command)
 
-ufw:
-ufw enable
-ufw deny/allow "protocol"
-ufw limit SSH  (rate limiting)
-ufw reload
-ufw status
-
-iptables:
--t nat,filter (add rule to the specific table)
--P CHAIN action (set the chain default policy)
--A INPUT,OUTPUT (append rule to the specific chain, a chain is a group of rules)
--j ACCEPT,REJECT,DROP (tells what to do if a packet matches the constraints specified in the previous arguments)
--j MASQUERADE (replacing the sender's address by the router's address)
--p tcp,udp,icmp,all (set the protocol this rule will apply to)
--m tcp,udp,conntrack,state,limit (modules)
---dport '' --sport '' (apply only to specific source or destination port)
---dport port -s address (apply only to specific port for specific IP)
--i/-o (specify input/output interface)
--I chain [rule-number] firewall-rule (insert rule in the chain as the given rule number, default is 1)
--p ! protocol -s ! address (! - except)
--p protocol --match multiport --sports portRange1:PortRange2 (port range)
--p protocol --match multiport --sports port1,port2 (rule for multiple ports)
--j REDIRECT --to-ports 'port' (redirect)
-
-iptables -D "rule" (delete specific rule)
-iptables -F (clear all rules)
-iptables -t table -F chain (clear all rules in chain)
-iptables -nvL --line-numbers (show current rules)
-iptables -S (show commands that create current rules)
-iptables -t filter/nat/mangle -L --line-numbers -n -v (show current rules from nat table)
-iptables -L (show all current rules)
-iptables-save > file-with-iptables-rules.txt (save current rules to a file)
-iptables-restore < file-with-iptables-rules.txt (load rules from a file)
-
-apt-get:
-apt-get install pkg_name=version (install package of specific version, mainly for package downgrade)
-apt search   (search for packages)
-apt-cache policy   (package versions)
-apt show 'package' (package info)
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "key" (add missing ubuntu GPG key)
-apt build-dep <package> (install/remove packages in an attempt to satisfy the build dependencies)
-apt changelog "package" (show changelog for specified package)
-apt-mark hold package_name (exclude or hold specific package from an update)
-apt-mark unhold package_name (undo package hold)
-aptitude install pkg_name=version (install package of specific version, mainly for package downgrade)
-apt-cache policy (list of repositories in use)
-aptitude why packegename (Why it is installed)
-aptitude search '~i~Dpackegename' (What depends on this package)
-ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
-
-dpkg:
-dpkg --status <package> (detailed package info, includes created conffiles)
-dpkg -l (list all packages)
-dpkg --get-selections | grep "hold" (packages on hold)
-dpkg-reconfigure (reconfigure  a  package  which   has   already   been   configured)
-dpkg -i --force-confmiss <package_deb>.deb (reinstall conffiles for a .deb)
-dpkg -S /path/to/file (name of the package that creates this file)
-dpkg -S /path/to/dir/ (list every package that added to this dir)
-dpkg --add-architecture i386 (add an extra architecture)
-dpkg --remove-architecture <arch> (remove architecture)
-
-yum:
-yum check-update (check for updates)
-yum update package-name (update specific package)
-yum install package-name (install specific package)
-yum --showduplicates list package-name (show available versions of specific package)
-yum update-to package-version (update or install package to specific version)
-yum list installed (list all installed packages)
-yum list installed package-name (show if package installed and it's version)
-yum list package-name (search for package)
-yum search package-name (search for package)
-yum info package-name (show detailed info about package)
-yum deplis package-name (show dependencies for package)
-yum localinstall foo.rpm (install package from local file)
-yum https://server1.cyberciti.biz/foo.rpm (install package using web address)
-yum downgrade package-name (downgrade a package)
-yum whatprovides /etc/file (what package provide a file)
-
 debugging:
 gdb /path/to/file
 gdb --pid=$(pid of 'process') (debug already running application)
@@ -335,6 +259,5 @@ strace -eopen appname  (what this program tries to open)
 LD_DEBUG=files appname > appname.log 2>&1 (what files an application is looking for)
 file /usr/bin/appname  (get more information)
 ltrace   (trace system calls and signals)
-debugfs /dev/sdXN (file system debugger, used to examine and change the state of an ext2-4 file system, undelete a file by using its inode and indicating a file)
-
+debugfs /dev/sdXN (file system debugger, used to examine and change the state of an ext2-4 file system)
 
