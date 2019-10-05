@@ -173,7 +173,7 @@ All, in all, the files in /proc will provide all information about a program:
 'fdinfo' contains one file corresponding to each open file, which tells you the current position for reading or writing.
 For different process info, look in to the 'status'.
 
-rsync - 
+rsync - open source utility that provides fast incremental file transfer, must be installed on both the source and the destination machine.
 The rsync protocol can easily be used for backups. Rsync must be installed on both the source and the destination machine
 Network file transfers use the SSH protocol by default and host can be a real hostname or a predefined profile/alias from .ssh/config.
 

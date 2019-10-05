@@ -1,17 +1,17 @@
 Ctrl+alt+F1-F6 (command line shells)
 Ctrl+alt+F7 (GUI shell)
-Alt+SysRg+b - reboot
-Alt+SysRg+o - shutdown
+Alt+SysRg+b (reboot, low-level commands understood by the Linux kernel)
+Alt+SysRg+o (shutdown, low-level commands understood by the Linux kernel)
 
-sudo !! - re-run previous command with 'sudo' prepended
+sudo !! (re-run previous command with 'sudo' prepended)
 ctrl-w (cut word behind cursor)
 ctrl-k (cut all in front of cursor)
 ctrl-u (cut all behind cursor)
 ctrl-y (past)
 ctrl + alt + - (undo)
-ctrl-x-e - continue editing your current shell line in a text editor (uses $EDITOR)
-alt-. - paste previous command's argument
-!$ - last argument in last command
+ctrl-x-e (continue editing your current shell line in a text editor (uses $EDITOR))
+alt-. (paste previous command's argument)
+!$    (last argument in last command)
 Ctrl+z (suspend and move process to background)
 CTRL+a (move to the beginning of a command (while typing))
 CTRL+e (move to the end of the command (while typing))
@@ -26,11 +26,6 @@ sudo i2cdetect -l           #look for SMBus, if not present then
 sudo modprobe "i2c-i801"    #SMBus adapter name taken from lspci(PCI/SMBus)
 sudo i2cdetect -l
 decode-dimms
-----------------------------------------------------------------------------
-echo low > /sys/class/drm/card0/device/power_profile (changing power profile)
-upower -i /org/freedesktop/UPower/devices/battery_BAT1 (battery info)
-cat sys/class/power_supply/BAT1/* (battery info)
-acpi -V (battery info(not default))
 --------------------------------------------------------------------------------------
 LANGUAGE=ru_RU "program" (change LANGUAGE env. variable for specific program)
 LANG=ru_RU.UTF-8 "program" (change LANG env. variable for specific program)
@@ -53,7 +48,10 @@ xinput --query-state 'id' (current state of different variables for this device 
 
 shutdown -Fr now (Force the filesystem check during reboot)
 
-kill -15 `lsof -t -u USER` (terminate all the processes for a specific user)
+kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
+
+ps -aux | grep Z/R/S (find process by status, Z - zombie process)
+ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
 ------------------------------------------------------------------------------------------
 # /etc/fstab (for persistent bind mounts)
 /some/where               /else/where              none    bind    0 0
@@ -70,22 +68,61 @@ bindfs -u cqqrstoo ~bob/stuff ~cqqrstoo/bobs-stuff
 # In /etc/fstab, that would translate to:
 bindfs#/home/bob/stuff /home/cqqrstoo/bobs-stuff fuse force-user=cqqrstoo 0 0
 -------------------------------------------------------------------------------
+apt-get:
+apt-get install pkg_name=version (install package of specific version, mainly for package downgrade)
+apt search   (search for packages)
+apt-cache policy   (package versions)
+apt show 'package' (package info)
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "key" (add missing ubuntu GPG key)
+apt build-dep <package> (install/remove packages in an attempt to satisfy the build dependencies)
+apt changelog "package" (show changelog for specified package)
+apt-mark hold package_name (exclude or hold specific package from an update)
+apt-mark unhold package_name (undo package hold)
+aptitude install pkg_name=version (install package of specific version, mainly for package downgrade)
+apt-cache policy (list of repositories in use)
+aptitude why packegename (Why it is installed)
+aptitude search '~i~Dpackegename' (What depends on this package)
+ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
+
 apt install --install-recommends "package" (install recommended packages additionally to one in question)
 apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
+-------------------------------------------------------------------------------------------
+dpkg:
+dpkg --status <package> (detailed package info, includes created conffiles)
+dpkg -l (list all packages)
+dpkg --get-selections | grep "hold" (packages on hold)
+dpkg-reconfigure (reconfigure  a  package  which   has   already   been   configured)
+dpkg -i --force-confmiss <package_deb>.deb (reinstall conffiles for a .deb)
+dpkg -S /path/to/file (name of the package that creates this file)
+dpkg -S /path/to/dir/ (list every package that added to this dir)
+dpkg --add-architecture i386 (add an extra architecture)
+dpkg --remove-architecture <arch> (remove architecture)
 
 dpkg-query -W -f='${Conffiles}\n' '*' | awk 'OFS="  "{print $2,$1}' | LANG=C md5sum -c 2>/dev/null | awk -F': ' '$2 !~ /OK$/{print $1}' | sort | less (show managed configuration files which have been changed from the default)
 debsums -ce (show managed configuration files which have been changed from the default)
-
 <packeges>=`sudo dpkg --get-selections | grep <name> | cut -f 1` (restore packages and files these packages created to its defaults)
 
 grep -l /etc/ssh/sshd_config /var/lib/dpkg/info/*.postinst(or preinst) (search through the maintainer scripts to see what creates file)
 dpkg-deb --fsys-tarfile openssh-client_*.deb | sudo tar x ./etc/ssh/ssh_config (extract file from .deb package)
-
-zgrep ' install' /var/log/dpkg.log* (installed packages list)
-
-wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+------------------------------------------------------------------------------------------
+yum:
+yum check-update (check for updates)
+yum update package-name (update specific package)
+yum install package-name (install specific package)
+yum --showduplicates list package-name (show available versions of specific package)
+yum update-to package-version (update or install package to specific version)
+yum list installed (list all installed packages)
+yum list installed package-name (show if package installed and it's version)
+yum list package-name (search for package)
+yum search package-name (search for package)
+yum info package-name (show detailed info about package)
+yum deplis package-name (show dependencies for package)
+yum localinstall foo.rpm (install package from local file)
+yum https://server1.cyberciti.biz/foo.rpm (install package using web address)
+yum downgrade package-name (downgrade a package)
+yum whatprovides /etc/file (what package provide a file)
 --------------------------------------------------------------------------------------------------------------------
 find . -type f -name "*.txt" -exec sed -i'' -e 's/old/new/g' {} + (replace every occurrence of 'old' with 'new' recursively)
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/old/new/g' (same but different method)
@@ -107,17 +144,22 @@ find . -type f -not -name 'smart' -delete (-not - exclude)
 find -name "*.txt" -not -path "*/folder1/*" -not -path "*/folder2/*" (exclude folders from search)
 
 find / -inum 517333 (retrieve all filenames which point to an inode number)
-
-sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
-
-cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
-cp -p file1 file2 (preserving the mode, ownership and timestamp)
--------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 touch -c -t 201212101830.55 "file" (changing file mod time)
 touch -d "2017-09-16 00:00:01" "file" (changing file mod time)
 
 cut -d ':' -f1,2 filename (cut file or program output,-d - delimiter,-f - field(s) to be displayed)
 
+sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
+
+cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
+cp -p file1 file2 (preserving the mode, ownership and timestamp)
+
+'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
+utility 2>&1 | tee output.log (redirect STDERR to STDOUT, both streams will be piped to the tee, data would be saved to file and reproduced in the console)
+utility 2>&1 >/dev/null | more_stuff (redirect STDERR to STDOUT, will detach error messages from STDOUT and pipped them forward)
+-------------------------------------------------------------------------------------------------------------------
+awk:
 awk 'condition { action }' filename
 awk 'pattern { action }' filename
 awk -F: '{print $1; print $3}' filename (print the first and third field(-F - field-separator where ":" - delimiter))
@@ -142,13 +184,6 @@ awk -F":" '/regexp/{print $2;next}{print $3}' filename (Print field number two o
 awk '{total += $1}END{ print total}' filename (add numbers from specific field and print total)
 awk '{total += $8}END{size=  total / 1024; printf "process total size %.2f MB\n", size}' (print process used memory)
 awk 'BEGIN {count=0}; $4 ~ /regex/ {count++};END{print "some text =",count}' filename
-
-'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
-utility 2>&1 | tee output.log (redirect STDERR to STDOUT, both streams will be piped to the tee, data would be saved to file and reproduced in the console)
-utility 2>&1 >/dev/null | more_stuff (redirect STDERR to STDOUT, will detach error messages from STDOUT and pipped them forward)
-
-ps -aux | grep Z/R/S (find process by status, Z - zombie process)
-ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
 --------------------------------------------------------------------------------------------------------------------
 grep -Rv "word_to_be_ignored" /where/to/search/ | grep "word_to_be_searched" (-R - recursive, -v - exclude)
 grep -E "word1|word2|word3" (multiple word search)
@@ -187,13 +222,7 @@ nmap --mtu 8/16/32/64 "host" (specify packets size)
 nmap -D RND:10 "host" (use decoy source hosts for scanning)
 nmap --source-port "port" "target host" (use specific port)
 nmap --script vulscan,vulners -sV HOST (run nmap scripts for finding vulnerabilities)
-
-iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-ports 8080 (incoming packets going to port 80 will be redirected to port 8080)
-iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE (NAT)
-
-ssh -L 1234:localhost:2812 remoteuser@remotehost (bind remote port(2812) with our local port(1234)(-L - local forwarding))
-ssh -N -D 'local_port' user@host -p 'remote_port' (tunnel with ssh, -N - don't login, -D - bind to local port(8080))
-
+---------------------------------------------------------------------------------------
 lsof:
 lsof -i :'port/tcp/udp' (which process is listening on port or protocol)
 lsof -i -P -n (established connections, ports in use)
@@ -204,7 +233,7 @@ lsof +D /path/to/directory (list all open files under a specific directory)
 lsof /proc or /home (list open files of specific file system or mount point)
 lsof /var/log | grep -i "deleted" (pid of files which were deleted but they are still exist in the system in deleted state)
 lsof /dev/DEVICE (list all open files for specific device)
-
+-------------------------------------------------------------------------------------
 NetworkManager:
 nmcli dev show (current connection details)
 nmcli device (list of network devices and their state)
@@ -215,9 +244,8 @@ nmcli radio wifi off/on (turn off/on wifi)
 nmcli connection up uuid UUID (reconnect an interface marked as disconnected)
 nmcli device disconnect ifname eth0 (disconnect an interface)
 nmcli connection edit 'Wired connection 2' (nmcli interactive editor to edit a connection)
-
-mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
-
+------------------------------------------------------------------------------------
+tcpdump:
 tcpdump -D (real and virtual interfaces)
 tcpdump -i "interface" -nnvvS (network activity monitoring(-nn - Don't resolve hostnames or port names,-S - absolute-tcp-sequence-numbers))
 tcpdump -i "interface" -vvnne (-e - show any link layer information)
@@ -228,19 +256,54 @@ tcpdump -i "interface" -vvnn tcp port 80 (captures using the specified port)
 tcpdump -i "interface" -vvnn proto \\icmp (captures using the specified protocol)
 tcpdump -i "interface" -n vlan 100 (show tagged VLAN traffic)
 tcpdump -i "interface" not and or (not - negating a filter match, and/or - combining filters)
+----------------------------------------------------------------------------------------
+iptables:
+-t nat,filter (add rule to the specific table)
+-P CHAIN action (set the chain default policy)
+-A INPUT,OUTPUT (append rule to the specific chain, a chain is a group of rules)
+-j ACCEPT,REJECT,DROP (tells what to do if a packet matches the constraints specified in the previous arguments)
+-j MASQUERADE (replacing the sender's address by the router's address)
+-p tcp,udp,icmp,all (set the protocol this rule will apply to)
+-m tcp,udp,conntrack,state,limit (modules)
+--dport '' --sport '' (apply only to specific source or destination port)
+--dport port -s address (apply only to specific port for specific IP)
+-i/-o (specify input/output interface)
+-I chain [rule-number] firewall-rule (insert rule in the chain as the given rule number, default is 1)
+-p ! protocol -s ! address (! - except)
+-p protocol --match multiport --sports portRange1:PortRange2 (port range)
+-p protocol --match multiport --sports port1,port2 (rule for multiple ports)
+-j REDIRECT --to-ports 'port' (redirect)
+
+iptables -D "rule" (delete specific rule)
+iptables -F (clear all rules)
+iptables -t table -F chain (clear all rules in chain)
+iptables -nvL --line-numbers (show current rules)
+iptables -S (show commands used to create your current rules)
+iptables -L (show all current rules)
+iptables -t filter/nat/mangle -L --line-numbers -n -v (show current rules from specified table)
+iptables-save > file-with-iptables-rules.txt (save current rules to a file)
+iptables-restore < file-with-iptables-rules.txt (load rules from a file)
+
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-ports 8080 (incoming packets going to port 80 will be redirected to port 8080)
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE (NAT)
 -----------------------------------------------------------------------------------
+mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
+
+ssh -L 1234:localhost:2812 remoteuser@remotehost (bind remote port(2812) with our local port(1234)(-L - local forwarding))
+ssh -N -D 'local_port' user@host -p 'remote_port' (tunnel with ssh, -N - don't login, -D - bind to local port(8080))
+
+wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+----------------------------------------------------------------------------------------------
 For open-source radeon and amdgpu driver:
 DRI_PRIME=1 %command% (make program to use another GPU)
 
 GALLIUM_HUD="fps,GPU-load+cpu" (overlay with different information)
 GALLIUM_HUD=help glxgears (available options list)
-GALLIUM_HUD="fps,GPU-load+cpu,VRAM-usage,sensors_temp_cu-pch_wildcat_point-virtual-0.temp1,sensors_temp_cu-radeon-pci-0d00.temp1"
+GALLIUM_HUD="fps,GPU-load+cpu,VRAM-usage,sensors_temp_cu-radeon-pci-0d00.temp1"
 
 GRUB_CMDLINE_LINUX_DEFAULT="radeon.cik_support=0 amdgpu.cik_support=1 radeon.si_support=0 amdgpu.si_support=1" (experimental amdgpu support)
 
 export MESA_GL_VERSION_OVERRIDE=3.3COMPAT (overrides env variable for compatiblity OpenGL version)
-
-cat /sys/kernel/debug/vgaswitcheroo/switch (GPUs power and connected output statuses)
 ---------------------------------------------------------------------------------------
 Compiling:
 ./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))
@@ -264,7 +327,7 @@ git reset --hard <hash> (changes the branch pointer to point at any commit in th
 git log --all (see git log)
 git log --pretty=oneline (single line format)
 git remote add "name" "url" (add remote repository to local git database)
-git push -u "name" (push changes to new remote repository, or to new branch)
+git push -u "name" "branch_name" (push changes to new remote repository, or to new branch)
 git push (push changes to remote repository)
 git pull (pull changes from remote repository)
 git branch (show current branch)
