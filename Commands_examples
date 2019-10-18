@@ -13,6 +13,8 @@ ctrl-x-e (continue editing your current shell line in a text editor (uses $EDITO
 alt-. (paste previous command's argument)
 !$    (last argument in last command)
 Ctrl+z (suspend and move process to background)
+Ctrl+c (send a SIGINT to the current foreground process)
+Ctrl+d (tells the terminal to register an EOF on standard input, shell will not expect any more commands, so it exited)
 CTRL+a (move to the beginning of a command (while typing))
 CTRL+e (move to the end of the command (while typing))
 CTRL+r (reverse history search)
@@ -21,9 +23,9 @@ CTRL+s (forward history search)
 Memory modules characteristics:
 sudo apt-get install i2c-tools
 sudo modprobe eeprom
-decode-dimms                #if error then
-sudo i2cdetect -l           #look for SMBus, if not present then
-sudo modprobe "i2c-i801"    #SMBus adapter name taken from lspci(PCI/SMBus)
+decode-dimms                # if error then
+sudo i2cdetect -l           # look for SMBus, if not present then
+sudo modprobe "i2c-i801"    # SMBus adapter name taken from lspci(PCI/SMBus)
 sudo i2cdetect -l
 decode-dimms
 --------------------------------------------------------------------------------------
@@ -46,13 +48,35 @@ xinput --list-props 'id' (avaliable parameters for device id)
 xinput --set-prop 'id' 'param' 'value' (set parameters for this dev id)
 xinput --query-state 'id' (current state of different variables for this device id)
 
-shutdown -Fr now (Force the filesystem check during reboot)
-
 kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
 
 ps -aux | grep Z/R/S (find process by status, Z - zombie process)
 ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
+
+mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
+
+wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+
+/lib/ld-linux.so /bin/chmod +x /bin/chmod (runing the loader directly to change permissions on /bin/chmod executable)
+perl -e 'chmod 0755, "foobar.file"' (using chmod() system call with perl instead of using /bin/chmod executable)
+----------------------------------------------------------------------------------------------------------------
+touch -c -t 201212101830.55 "file" (changing file mod time)
+touch -d "2017-09-16 00:00:01" "file" (changing file mod time)
+
+cut -d ':' -f1,2 filename (cut file or program output,-d - delimiter,-f - field(s) to be displayed)
+
+cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
+cp -p file1 file2 (preserving the mode, ownership and timestamp)
+
+dd if=/dev/sda bs=1M | gzip -c -9 > sda.dd.gz (clone and compress the entire /dev/sda block device, bs=1M block size, -c --to-stdout, -9 compression ratio)
+dd if=/dev/zero bs=1M of=/dev/sda (overwrite the disk with zeros)
+dd if=/dev/random bs=1M of=/dev/sda (fill the disk with random data)
+
+'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
+utility 2>&1 | tee output.log (redirect STDERR to STDOUT, both streams will be piped to the tee, data would be saved to file and reproduced in the console)
+utility 2>&1 >/dev/null | more_stuff (redirect STDERR to STDOUT, will detach error messages from STDOUT and pipped them forward)
 ------------------------------------------------------------------------------------------
+bind mount:
 # /etc/fstab (for persistent bind mounts)
 /some/where               /else/where              none    bind    0 0
 /some/where               /readonly/       view    none    bind,ro
@@ -68,18 +92,17 @@ bindfs -u cqqrstoo ~bob/stuff ~cqqrstoo/bobs-stuff
 # In /etc/fstab, that would translate to:
 bindfs#/home/bob/stuff /home/cqqrstoo/bobs-stuff fuse force-user=cqqrstoo 0 0
 -------------------------------------------------------------------------------
-apt-get:
+apt:
 apt-get install pkg_name=version (install package of specific version, mainly for package downgrade)
 apt search   (search for packages)
-apt-cache policy   (package versions)
 apt show 'package' (package info)
+apt-cache policy (list of repositories in use)
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "key" (add missing ubuntu GPG key)
 apt build-dep <package> (install/remove packages in an attempt to satisfy the build dependencies)
 apt changelog "package" (show changelog for specified package)
 apt-mark hold package_name (exclude or hold specific package from an update)
 apt-mark unhold package_name (undo package hold)
 aptitude install pkg_name=version (install package of specific version, mainly for package downgrade)
-apt-cache policy (list of repositories in use)
 aptitude why packegename (Why it is installed)
 aptitude search '~i~Dpackegename' (What depends on this package)
 ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
@@ -99,6 +122,8 @@ dpkg -S /path/to/file (name of the package that creates this file)
 dpkg -S /path/to/dir/ (list every package that added to this dir)
 dpkg --add-architecture i386 (add an extra architecture)
 dpkg --remove-architecture <arch> (remove architecture)
+dpkg-query -L <package> (list the contents of installed package)
+dpkg --contents filename.deb (list the contents of specific .deb package)
 
 dpkg-query -W -f='${Conffiles}\n' '*' | awk 'OFS="  "{print $2,$1}' | LANG=C md5sum -c 2>/dev/null | awk -F': ' '$2 !~ /OK$/{print $1}' | sort | less (show managed configuration files which have been changed from the default)
 debsums -ce (show managed configuration files which have been changed from the default)
@@ -106,6 +131,8 @@ debsums -ce (show managed configuration files which have been changed from the d
 
 grep -l /etc/ssh/sshd_config /var/lib/dpkg/info/*.postinst(or preinst) (search through the maintainer scripts to see what creates file)
 dpkg-deb --fsys-tarfile openssh-client_*.deb | sudo tar x ./etc/ssh/ssh_config (extract file from .deb package)
+
+dpkg --list | grep -E 'linux-image|linux-headers|linux-modules' (all installed kernel packages)
 ------------------------------------------------------------------------------------------
 yum:
 yum check-update (check for updates)
@@ -123,7 +150,21 @@ yum localinstall foo.rpm (install package from local file)
 yum https://server1.cyberciti.biz/foo.rpm (install package using web address)
 yum downgrade package-name (downgrade a package)
 yum whatprovides /etc/file (what package provide a file)
+
+rpm -ql <package> (list the contents of installed package)
+rpm -qlp filename.rpm (list the contents of specific .rpm package)
+repoquery -l filename.rpm (list the contents of specific .rpm package)
 --------------------------------------------------------------------------------------------------------------------
+find . -type f -name "*.txt" -exec sed -i'' -e 's/foo/bar/g' {} + (same but differently)
+find . -type f ! -name "avoid_this_directory_please" (find with avoid command)
+find . -printf "%M\t%u\t%g\t%p\n" (list of files, as ls command)
+find -name "*.txt" -not -path "*/folder1/*" -not -path "*/folder2/*" (exclude folders from search)
+find . -maxdepth 1 -type f -delete (maxdepth - depth of search, delete - delete found files)
+find . -type d -name "name" -exec rm -rv {} + (delete folders recursively)
+find . -type f -name "name" -exec rm -r --interactive=never {} + (never be interactive, never prompt)
+find . -type f -not -name 'smart' -delete (-not - exclude)
+find / -inum 517333 (retrieve all filenames which point to an inode number)
+
 find . -type f -name "*.txt" -exec sed -i'' -e 's/old/new/g' {} + (replace every occurrence of 'old' with 'new' recursively)
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/old/new/g' (same but different method)
 
@@ -136,28 +177,19 @@ find . -type d -print0 | while read -d '' -r dir; do files=("$dir"/*); printf "%
 
 find . -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" " (last modified files)
 find /etc/ -type f -mmin -$((60*24)) -exec ls -halt {} +  (list modified files)
-
-find . -maxdepth 1 -type f -delete (maxdepth - depth of search, delete - delete found files)
-find . -type d -name "name" -exec rm -rv {} + (delete folders recursively)
-find . -type f -not -name 'smart' -delete (-not - exclude)
-
-find -name "*.txt" -not -path "*/folder1/*" -not -path "*/folder2/*" (exclude folders from search)
-
-find / -inum 517333 (retrieve all filenames which point to an inode number)
 -----------------------------------------------------------------------------------------------------------
-touch -c -t 201212101830.55 "file" (changing file mod time)
-touch -d "2017-09-16 00:00:01" "file" (changing file mod time)
-
-cut -d ':' -f1,2 filename (cut file or program output,-d - delimiter,-f - field(s) to be displayed)
+sed:
+sed -e 'command1' -e 'command2' ... -e 'commandN' files (multiple sed commands)
+sed -i '10s/sh/quiet/g' (substitute the string sh with the string quiet only on line 10)
+sed -i 's/# */# /g' file (add space after a specified character in a string, * - matches zero or more occurrences of the previous character)
+sed -i 's/./& /15' file (add space at specified point in a string, . - matches any single character)
+sed '/^daemon/d' (deletes lines starting with daemon, ^ - matches the beginning of lines)
+sed '/sh$/d' (deletes all the lines ending with sh −, $ - matches the end of lines)
+/^$/    (Matches blank lines)
+/^.*$/  (Matches an entire line whatever it is)
+/ */    (Matches one or more spaces)
 
 sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
-
-cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
-cp -p file1 file2 (preserving the mode, ownership and timestamp)
-
-'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
-utility 2>&1 | tee output.log (redirect STDERR to STDOUT, both streams will be piped to the tee, data would be saved to file and reproduced in the console)
-utility 2>&1 >/dev/null | more_stuff (redirect STDERR to STDOUT, will detach error messages from STDOUT and pipped them forward)
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
@@ -229,7 +261,7 @@ lsof -i -P -n (established connections, ports in use)
 lsof -p [PID] -R (opened files based on process PID, -R - show PPID)
 lsof -u USER (list files opened by processes belonging to a specific user)
 lsof -t filename (list IDs of processes that have opened a particular file)
-lsof +D /path/to/directory (list all open files under a specific directory)
+lsof -D /path/to/directory (list all open files under a specific directory)
 lsof /proc or /home (list open files of specific file system or mount point)
 lsof /var/log | grep -i "deleted" (pid of files which were deleted but they are still exist in the system in deleted state)
 lsof /dev/DEVICE (list all open files for specific device)
@@ -287,12 +319,19 @@ iptables-restore < file-with-iptables-rules.txt (load rules from a file)
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-ports 8080 (incoming packets going to port 80 will be redirected to port 8080)
 iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE (NAT)
 -----------------------------------------------------------------------------------
-mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
+ssh:
+ssh -L 1234:localhost:2812 User@remotehost (tunnel with ssh, forwards the local port 1234 to the remote port 2812. -L - local forwarding, forward all connection attempts on local port to remote port on the remote host, which can be reached from the remote host machine)
+ssh -L 80:localhost:80 SUPERSERVER (connection made to the local port 80 is to be forwarded to port 80 on SUPERSERVER)
 
-ssh -L 1234:localhost:2812 remoteuser@remotehost (bind remote port(2812) with our local port(1234)(-L - local forwarding))
-ssh -N -D 'local_port' user@host -p 'remote_port' (tunnel with ssh, -N - don't login, -D - bind to local port(8080))
+ssh -R 50505:localhost:22 User@remotehost (tunnel with ssh, forwards the remote port 50505 to the local port 22. -R - remote forwarding, forward all connection attempts to the remote port to local port on local host, which can be reached from your local machine)
+ssh -R 80:localhost:80 tinyserver (connection made to the port 80 of tinyserver is to be forwarded to port 80 on your local machine)
 
-wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+ssh -g -L 9000:localhost:3000 user@example.com (remote forwarding followed by a local forwarding, but from the remote server. -g allows remote hosts to connect to local forwarded ports and this will make loopback port 3000 on the server accessible on all interfaces on port 9000)
+
+ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - don't login, -D - Dynamic port forwarding allows communication across a range of ports. This makes SSH acts as a SOCKS proxy server. A SOCKS proxy is a simple SSH tunnel in which specific applications forward their traffic through the tunnel to the remote server, then the proxy forwards the traffic out to the general internet. Has to be configured for each application separately on the client machine.
+
+ssh -D 9000 -f -C -q -N user@host (-D create a SOCKS tunnel on the the port 9000, -C compresses, -q enables quiet mode, -f forks the process to the background)
+ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disable pseudo-terminal allocation, -p port, -i different private keys)
 ----------------------------------------------------------------------------------------------
 For open-source radeon and amdgpu driver:
 DRI_PRIME=1 %command% (make program to use another GPU)
@@ -349,6 +388,8 @@ udevadm monitor --environment --udev (monitor environment variables while unplug
 udevadm test $(udevadm info -q path -n device_name) 2>&1 (testing rules before loading, it will not perform all actions in your new rules but it will however process symlink rules on existing devices)
 udevadm test /sys/class/backlight/acpi_video0/ (test the udev rule for specific device/system path)
 udevadm control --reload (If rules fail to reload automatically)
+#/etc/udev/rules.d/30-radeon-pm.rules (persistent udev rule for GPU power management, if the rules are failing, try removing the dri/ prefix)
+KERNEL=="dri/card0", SUBSYSTEM=="drm", DRIVERS=="radeon", ATTR{device/power_dpm_force_performance_level}="high"
 --------------------------------------------------------------------------------------------------
 LXC:
 lxc-ls -f (list all installed LXC containers)
@@ -359,7 +400,21 @@ lxc-attach -n CONTAINER_NAME --clear-env (attach to a container)
 lxc-copy -n CONTAINER_NAME -N snap1 -B overlayfs -s (create snapshot of a specific container, which we will call "snap1")
 lxc-attach -n CONTAINER_NAME --clear-env -- sudo -u YOURUSER env DISPLAY=:0 PROGRAM_NAME (running Xorg programs)
 
---------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+cgroups:
+cgm create <controller> <cgroup>
+cgm create cpu    groupname (create a new cgroup named groupname with cpu controller)
+cgm create memory groupname (create a new cgroup named groupname with memory controller)
+cgm chown <controller> <cgroup> uid gid
+cgm chown  memory groupname 1000 0  (change cgroup to user ID `1000` and system group root (GID 0))
+chown user /sys/fs/cgroup/{memory,cpu}/groupname/* (change ownership in all cgroup subgroups)
+cgm movepid <controller> <cgroup> pid
+cgm movepid memory groupname $pid (move process to cgroup named groupname in controller memory)
+cgm movepid cpu groupname $pid_of_bash (move bash to cgroup named groupname in controller cpu)
+cgm setvalue memory groupname memory.limit_in_bytes 10000000 (limit the memory usage of all processes in this group to 10 MB, once tasks hit this limit, they will begin to swap)
+echo 100 > /sys/fs/cgroup/cpu/groupname/foo/cpu.shares (CPU priority ("shares") of this group. By default all groups have 1024 shares. A group with 100 shares will get a ~10% portion of the CPU time)
+cgm setvalue freezer groupname freezer.state FROZEN (freeze cgroup named groupname)
+----------------------------------------------------------------------------------------
 rsync:
 rsync -a --delete --quiet /folder/to/backup /location/of/backup (-a - archived and syncs recursively)
 rsync -a --delete local-file user@remote-host:remote-file (--delete - delete from destination if removed from source)
