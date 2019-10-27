@@ -1,0 +1,18 @@
+Docker - utility to pack, ship and run any application as a lightweight container.
+
+docker ps (show running containers)
+docker ps -a (show all containers)
+docker stats (running containers info)
+docker container prune (remove all stopped containers)
+
+docker images (show docker images)
+docker logs <container-id|container-name> (get logs from container)
+docker network ls (show all docker networks)
+docker volumes ls (show all docker volumes)
+docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+
+docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable \ 
+        stress --vm 1 --vm-bytes 2000M --vm-hang 0                  
+-m 256m (set memory limit)
+--memory-swap 256m (set swap limit)
+--oom-kill-disable (hung container if it's memory consumption exceeds your -m VALUE, or otherwise it will be just killed by oom-killer)

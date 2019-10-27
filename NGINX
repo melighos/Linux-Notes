@@ -1,0 +1,6 @@
+NGINX -
+
+/var/www (contains a directory for each website)
+
+Commands:
+nginx -t -c </path/to/nginx.conf> (check nginx config file)

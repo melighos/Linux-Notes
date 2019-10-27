@@ -1,22 +1,31 @@
 Linux boot order(In General):
-1.Boot loader - piece of software started by the BIOS or UEFI. It is responsible for loading the kernel with the wanted kernel parameters, and initial RAM disk based on configuration files.
-2.Kernel - core of an operating system. It functions on a low level (kernelspace) interacting between the hardware of the machine and the programs which use the hardware to run.
-3.initramfs - after the boot loader loads the kernel and possible initramfs files and executes the kernel, the kernel unpacks the initramfs (initial RAM filesystem) archives into the (then empty) rootfs (initial root filesystem, specifically a ramfs or tmpfs). The first extracted initramfs is the one embedded in the kernel binary during the kernel build, then possible external initramfs files are extracted. Thus files in the external initramfs overwrite files with the same name in the embedded initramfs. The kernel then executes /init (in the rootfs) as the first process. The early userspace starts.
+1.Boot loader - piece of software started by the BIOS or UEFI. It is responsible for loading the kernel with the wanted kernel parameters,
+and initial RAM disk based on configuration files.
+2.Kernel - core of an operating system. It functions on a low level (kernelspace) interacting between the hardware of the machine and the programs 
+which use the hardware to run.
+3.initramfs - after the boot loader loads the kernel and possible initramfs files and executes the kernel, the kernel unpacks the initramfs
+(initial RAM filesystem) archives into the (then empty) rootfs (initial root filesystem, specifically a ramfs or tmpfs).
+The first extracted initramfs is the one embedded in the kernel binary during the kernel build, then possible external initramfs files are extracted.
+Thus files in the external initramfs overwrite files with the same name in the embedded initramfs.
+The kernel then executes /init (in the rootfs) as the first process. The early userspace starts.
 The purpose of the initramfs is to bootstrap the system to the point where it can access the root filesystem.
-4.init process - at the final stage of early userspace, the real root is mounted, and then replaces the initial root filesystem. /sbin/init is executed, replacing the /init process.
-5.getty - init calls getty once for each virtual terminal (typically six of them), which initializes each tty and asks for a username and password. Once the username and password are provided, getty checks them against /etc/passwd and /etc/shadow, then calls login. Alternatively, getty may start a display manager if one is present on the system.
-6.Display manager - can be configured to replace the getty login prompt on a tty, in order to automatically initialize a display manager after booting, it is necessary to manually enable the service unit through systemd(or other init system).
+4.init process(systemd) - at the final stage of early userspace, the real root is mounted, and then replaces the initial root filesystem. /sbin/init is executed,
+replacing the /init process.
+5.getty - init calls getty once for each virtual terminal (typically six of them), which initializes each tty and asks for a username and password.
+Once the username and password are provided, getty checks them against /etc/passwd and /etc/shadow, then calls login.
+Alternatively, getty may start a display manager if one is present on the system.
+6.Display manager(lightdm) - can be configured to replace the getty login prompt on a tty, in order to automatically initialize a display manager after booting,
+it is necessary to manually enable the service unit through systemd(or other init system).
 7.Login - login program begins a session for the user by setting environment variables and starting the user's shell, based on /etc/passwd.
-8.Shell - once the user's shell is started, it will typically run a runtime configuration file, such as bashrc, before presenting a prompt to the user. If the account is configured to Start X at login, the runtime configuration file will call startx or xinit.
-9.GUI - xinit runs the user's xinitrc runtime configuration file, which normally starts a window manager. When the user is finished and exits the window manager, xinit, startx, the shell, and login will terminate in that order, returning to getty. 
+8.Shell - once the user's shell is started, it will typically run a runtime configuration file, such as bashrc, before presenting a prompt to the user.
+If the account is configured to Start X at login, the runtime configuration file will call startx or xinit.
+9.GUI - xinit runs the user's xinitrc runtime configuration file, which normally starts a window manager. When the user is finished and exits the window manager,
+xinit, startx, the shell, and login will terminate in that order, returning to getty. 
 
 initramfs(initial RAM filesystem) - the initial root filesystem, bootstrap the system to the point where it can access the real root filesystem.
 
 Init - first process started during system boot and continues running until the system is shut down. Started by the kernel using a hard-coded filename.
 Init is the direct or indirect ancestor of all other processes, and automatically adopts all orphaned processes.
-
-Kernel - computer program that is the core of a computer's operating system, with complete control over everything in the system. Linux have a monolithic kernel, although its functionalities can be included statically or built and loaded as separate modules, it always runs as a "single piece" in the same address space.
-Package manager Kernel files: linux-headers-xxx linux-headers-xxx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic
 
 processes - running instance of a program, also called a task. Each process is given a unique number: a process identification number (PID).
 When a process is running, it can spawn other processes. This is accomplished through the 'fork' system call.
@@ -32,6 +41,13 @@ and set of structures the system can use to save the thread context.
 daemons - special class of processes that run exclusively in the background. daemons are usually launched automatically and stay in the background
 until their services are required.
 
+OOM Killer - Out Of Memory Killer is a process that the linux kernel employs when the system is critically low on memory.
+OOM Killer works by reviewing all running processes and assigning them a badness score. The process that has the highest score is the one that is killed.
+It will choose a process using lots of memory and has lots of child processes and which are not system processes.
+The primary goal is to kill the least number of processes that minimizes the damage done and at the same time maximizing the amount of memory freed.
+If it's invoked it will write a great deal of information to the system log including which process was killed and why.
+/proc/<pid>/oom_score (oom_score of each of the processes)
+
 Inod - entry in inode table, containing information. Linux extended filesystems such as ext2 or ext3 maintain an array of these inodes: the inode table. This table contains list of all files in that filesystem. The individual inodes in inode table have a unique number (unique to that filesystem), the inode number.
 Inod contains all of the file’s metadata: list of all the blocks in which a file is stored, the owner information for that file, permissions and all other
 attributes, etc... 
@@ -44,6 +60,15 @@ cf TCP), or an unreliable and unordered transmission (SOCK_DGRAM, cf UDP).
 IPC sockets, like everything else on unix, are files, and so two processes can send information to the same socket through the use of inodes.
 
 LVM(logical volume manager) - manages disk drives and similar mass-storage devices.
+You can think of LVM as "dynamic partitions", meaning that you can create/resize/delete LVM "partitions"
+(they're called "Logical Volumes" in LVM-speak) from the command line while your Linux system is running.
+If you use LVM across hard drives, you may lose all your data when only one drive fails.
+Features that LVM provide:
+1.If you have more than one hard-disk, LVM can extend over more than one disk, they are not limited by the size of one single disk,
+rather by the total aggregate size.
+2.You can set up "striped" LVs, so that I/O can be distributed to all disks hosting the LV in parallel(Similar to RAID-0, but a bit easier to set-up).
+3.You can create a (read-only) snapshot of any LV. You can revert the original LV to the snapshot at a later time,
+or delete the snapshot if you no longer need it. This is handy for server backups or to provide a "safety net" before a critical system upgrade.
 
 D-Bus - message bus system that provides an easy way for inter-process communication.
 
@@ -66,7 +91,12 @@ Single-user mode:
 Select the GRUB boot menu entry you wish to use, then press 'e' to edit the GRUB boot commands for the selected boot menu entry
 Add the kernel boot parameter 'single' to the end of the root mount line, you could also change 'ro' to 'rw' so the file system gets mounted writable
 'Ctrl+X' or 'F10' to boot using these kernel options.
+Could also try to type boot -s at the Boot: prompt.
 If you might not be able to use the single method, then use a different init like that: 'rw init=/bin/bash'
+
+Kernel - computer program that is the core of a computer's operating system, with complete control over everything in the system. Linux have a monolithic kernel, although its functionalities can be included statically or built and loaded as separate modules, it always runs as a "single piece" in the same address space.
+Package manager Kernel files: linux-headers-xxx linux-headers-xxx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic
+/etc/sysctl.conf (config file that can be used for setting kernel parameters, run 'sysctl -p' to make the changes permanently without rebooting)
 
 Kernel module - pieces of code that can be loaded and unloaded into the kernel upon demand. A module can be configured as built-in or loadable. To dynamically load or remove a module, it has to be configured as a loadable module in the kernel configuration. 
 /lib/modules/kernel_release     (stored Modules)
@@ -82,10 +112,11 @@ All, in all, the files in /proc will provide all information about a program:
 'exe' will be a link to executable.
 'environ' contains  the  environment  for  the process.
 'cwd' to current working directory. 
-'fd' directory contains links to currently open files (including standard input, output and error).
+'fd' directory contains links to currently open files(file descriptors) (including standard input, output and error).
 'fdinfo' contains one file corresponding to each open file, which tells you the current position for reading or writing.
 'io' contains I/O statistics for the process
 'status' different process info
+/proc/sys/ (system configuration information and interfaces)
 
 namespaces - wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource.  Changes to  the  global resource  are  visible  to  other processes that are members of the namespace, but are invisible to other processes.
 /proc/[pid]/ns/xxx (containing one entry for each namespace that supports being manipulated by system call setns)
@@ -94,10 +125,32 @@ namespaces - wraps a global system resource in an abstraction that makes it appe
 
 cgroups(control groups) - Linux kernel feature to limit, police and account the resource usage for a set of processes. Compared to other approaches like the 'nice' command or /etc/security/limits.conf, cgroups are more flexible as they can operate on (sub)sets of processes (possibly with different system users)
 /sys/fs/cgroup/xxx (cgroups lists)
+/sys/fs/cgroup/memory/memory.oom_control: (OOM Killer notification and other controls)
+# If enabled (oom_kill_disable 0), tasks that attempt to consume more memory than they are allowed are immediately killed by the OOM killer.
+# When the OOM killer is disabled, tasks that attempt to use more memory than they are allowed are paused until additional memory is freed.
+# under_oom entry reports the value 1 If the cgroup is out of memory and tasks in it are paused.
 
 udev - device manager for the Linux kernel.
 udev can be used to set up static device names, perform some action on a specific disk device, wake up functionality of a suspend USB device or disabling the wakeup functionality, etc...
 /etc/udev/rules.d/ (udev rules written by the administrator)
+
+Process Priority and Nice value:
+Nice(NI) value is a user-space and priority(PR) is the process's actual priority that use by Linux kernel.
+PR -- Priority. The scheduling priority of the task. If you see 'rt' in this field, it means the task is running under 'real time' scheduling priority.
+NI -- Nice Value. The nice value of the task. A negative nice value means higher priority, whereas a positive nice value means lower priority.
+PR = 20 + NI
+NI value is just a suggestion to kernel, kernel sometimes ignore it.
+Priorities range from 0 to 139 in which 0 to 99 for real time and 100 to 139 for users.
+Nice value range is -20 to +19 where -20 is highest, 0 default and +19 is lowest.
+
+Global and User system environment settings files:
+~/.profile
+~/.bashrc (only for command line shell)
+~/.zshrc (only for command line shell)
+~/.pam_environment (first thing the system reads at user login)
+/etc/bashrc (only for command line shell)
+/etc/profile
+/etc/login.defs (used by pam for umask default value)
 
 Access Control List(ACL) - more flexible permission mechanism for file permissions.
 tune2fs -l /dev/sdXY | grep "Default mount options:" (check if enable for current drives)
@@ -136,8 +189,28 @@ cat /proc/sys/kernel/core_pattern  (where automatic core dumps go)
 /var/lib/systemd/coredump (possible core dumps location)
 
 Network configuration:
-/sys/class/net (network interfaces names)
+/sys/class/net (network interfaces)
 /etc/network/interfaces (network interfaces configuration)
+/proc/sys/net/ipv4/ip_forward (current state of IP forwarding)
+echo 0(1) > /proc/sys/net/ipv4/ip_forward (temporary disable/enable the IP forwarding)
+/etc/sysctl.conf:
+net.ipv4.ip_forward=1 (permanently disable/enable the IP forwarding)
+net.ipv4.tcp_tw_recycle = 1 (append to disable/enable fast recycle of sockets in TIME_WAIT state, can cause problems)
+net.ipv4.tcp_tw_reuse = 1 (append to disable/enable reuse of sockets in TIME_WAIT state, can cause problems)
+# TIME-WAIT - represents waiting for enough time to pass to be sure the remote TCP received the acknowledgment of its connection termination request.
+/proc/sys/net/ipv4/ip_local_port_range (available ports range from unreserved source ports, default is 32768 to 61000)
+
+conntrack - connection tracking or flow analysis.
+'Cannot alloc conntrack' means that the attempt to allocate memory to track a new network connection failed.
+Connections can mean a lot more than TCP connections. ICMP, SIP, and UDP can all count towards your limits.
+connection tracking system stores information about the state of a connection in a memory structure that contains the source and destination IP addresses,
+port number pairs, protocol types, state, and timeout.
+Each new connection goes onto a connection tracking table which has a limited number of entries.
+If and when that connection table fills up, the oldest entry is dropped.
+This means that old connections may suddenly disconnect if too many connections are established.
+sysctl -w net.netfilter.nf_conntrack_max=65535 (change max number of possible connection tracking)
+/proc/sys/net/netfilter/nf_conntrack_max (maximum number of possible connection tracking)
+/proc/sys/net/netfilter/nf_conntrack_count (current count of connection tracking)
 
 DNS - Domain Name System
 /etc/resolv.conf
@@ -162,6 +235,7 @@ Which authentication module is to be attached is dependent upon the local system
 PAM is dynamically linked at runtime, login application is pam-aware and must, therefore, have a policy.
 /etc/security (contains system-specific configuration for variables the authentication methods offer)
 /etc/pam.d/ (PAM configuration to link the applications to the individual systems' authentication schemes)
+/etc/pam.d/common-password (password related modules in which hashing algorithm can be set)
 
 SSH - secure shell, an encrypted protocol used to administer and communicate with servers.
 etc/ssh/sshd_config (config for ssh server)
@@ -211,14 +285,29 @@ It does not provide a virtual machine, but rather provides a virtual environment
 /etc/lxc/default.conf (default config)
 /etc/lxc/containername/config (specific container config)
 
-Docker - utility to pack, ship and run any application as a lightweight container.
+Nagios - 
 
-Process Priority and Nice value:
-Nice(NI) value is a user-space and priority(PR) is the process's actual priority that use by Linux kernel.
-PR -- Priority. The scheduling priority of the task. If you see 'rt' in this field, it means the task is running under 'real time' scheduling priority.
-NI -- Nice Value. The nice value of the task. A negative nice value means higher priority, whereas a positive nice value means lower priority.
-PR = 20 + NI
-NI value is just a suggestion to kernel, kernel sometimes ignore it.
-Priorities range from 0 to 139 in which 0 to 99 for real time and 100 to 139 for users.
-Nice value range is -20 to +19 where -20 is highest, 0 default and +19 is lowest.
+1.Active and Passive check in Nagios:
+Active checks are initiated and performed by Nagios:
+active checks are initiated by the Nagios process.
+active checks are run on a regularly scheduled basis.
+Passive checks are performed by external applications and useful for monitoring services that are:
+asynchronous in nature and cannot be monitored effectively by polling their status on a regularly scheduled basis.
+located behind a firewall and cannot be checked actively from the monitoring host.
+2.Nagios Remote Plugin Executor(NRPE) - addon is designed to allow you to execute Nagios plugins on remote Linux/Unix machines.
+The main reason for doing this is to allow Nagios to monitor "local" resources (like CPU load, memory usage, etc.) on remote machines.
+Since these public resources are not usually exposed to external machines, NRPE must be installed on the remote Linux/Unix machines.
+
+LD_LIBRARY_PATH - Environment variable, colon-separated set of directories where libraries should be searched for first, before the standard set of directories.
+This is useful when debugging a new library or using a nonstandard library for special purposes.
+
+----------------------------------------------------------------------------------------
+System Calls:
+Fork(): it is used to create a new process
+Exec(): it is used to execute a new process
+Wait(): it is used to make the process to wait
+Exit(): it is used to exit or terminate the process
+Getpid(): it is used to find the unique process ID
+Getppid(): it is used to check the parent process ID
+Nice(): it is used to bias the currently running process property
 
