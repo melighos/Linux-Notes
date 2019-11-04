@@ -1,0 +1,87 @@
+MariaDB - reliable, high performance and full-featured database server which aims to be an 'always Free, backward compatible, drop-in' replacement of MySQL.
+For security reasons, the systemd service file contains ProtectHome=true, which prevents MariaDB from accessing files under the /home, /root and /run/user hierarchies. The datadir has to be in an accessible location and owned by the mysql user and group.
+/etc/my.cnf /etc/my.cnf.d/ ~/.my.cnf (config files location)
+/etc/my.cnf.d/server.cnf:
+#skip-networking                    (enable access your MySQL server from other LAN hosts)
+bind-address = <some ip-address>
+port=3360                           (you can add setting to run database on non-standard port)
+
+commands:
+mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql (script to set up MariaDB, run the following command before starting the mariadb.service)
+mysql --version (version of MySQL or MariaDB database)
+mysql_secure_installation (command will interactively guide you through a number of recommended security measures)
+mysqlcheck -A --auto-repair -f -o -u root -p (Forcefully optimize all tables, automatically fixing table errors that may come up)
+mysql -u root -p (enter your MySQL as root user) # If you haven’t set a password for your MySQL root user, you can omit the -p switch
+mysql_upgrade -u root -p (upgrade databases)
+
+MySQL commands:
+mysql> CREATE USER 'myuser' IDENTIFIED BY 'mypassword'; (create new user and give him password)
+mysql> CREATE USER 'newuser'@'10.8.0.5' IDENTIFIED BY 'user_password'; (grant created user access from another host)
+mysql> CREATE USER 'newuser'@'%' IDENTIFIED BY 'user_password'; (create a user that can connect from any host, use the '%')
+
+mysql> CREATE DATABASE `mydb`; (create new database)
+mysql> CREATE TABLE `db_name`.`tbl_name`; (create new table in specific database)
+
+mysql> SHOW DATABASES; (list of the available databases)
+mysql> SHOW TABLES; (list of the available tables)
+mysql> DESC `mydb`; (structure of any particular table)
+
+DROP USER myuser@localhost; (delete user)
+DROP DATABASE mydb; (delete database)
+
+mysql> GRANT permission1, permission2 ON 'database_name.table_name' TO 'database_user'@'localhost'; (grant specific privileges to a user account)
+mysql> GRANT ALL privileges ON `mydb`.* TO 'myuser'@localhost; (grant all privileges to a user for all tables of specific database)
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'my_optional_remote_password' WITH GRANT OPTION; (grant remote access for your user)
+mysql> REVOKE ALL PRIVILEGES ON database_name.* TO 'database_user'@'localhost'; (remove privileges)
+mysql> FLUSH PRIVILEGES (Apply changes to assigned permissions)
+
+-------------------------------------------------------------
+Commonly used privileges are:
+    ALL PRIVILEGES – Grants all privileges to a user account.
+    CREATE – The user account is allowed to create databases and tables.
+    DROP - The user account is allowed to drop databases and tables.
+    DELETE - The user account is allowed to delete rows from a specific table.
+    INSERT - The user account is allowed to insert rows into a specific table.
+    SELECT – The user account is allowed to read a database.
+    UPDATE - The user account is allowed to update table rows.
+-------------------------------------------------------------------------------
+mysql> SHOW GRANTS FOR 'database_user'@'localhost'; (show user permissions)
+mysql> SELECT User, Host FROM 'mysql.user' WHERE Host <> 'localhost'; (Check current users with remote access privileged)
+
+
+Backup and Restore:
+For automatic backup:
+Store mysql root password in /root/.my.cnf so our script (running as root) can access it. chmod 600
+[client]
+user=root
+password=yourmysqlrootpassword
+
+mysqldump --add-drop-table --databases <databasename> | gzip -9 > /backup/sql/<database>-date +\%y-\%m-\%d--\%H:\%M.sql.gz
+
+------------------------------------------------------
+Or:
+You should add the following section to the relevant configuration file:
+[mysqldump]
+user=mysqluser
+password=secret
+
+Example script:
+#!/bin/bash
+
+THISDIR=$(dirname $(readlink -f "$0"))
+
+mysqldump --single-transaction --flush-logs --master-data=2 --all-databases \
+ | gzip > $THISDIR/db_backup.gz
+echo 'purge master logs before date_sub(now(), interval 7 day);' | mysql
+------------------------------------------------------
+mysqldump --single-transaction --flush-logs --master-data=2 --all-databases -u root -p | gzip > all_databases.sql.gz (create and compress SQL tables backup)
+zcat all_databases.sql.gz | mysql -u root -p (Decompressing the backup thus created and reloading it in the server)
+
+------------------------------------------------------------------------------------------------
+Holland Backup:
+python-based software package to automate all of the backup work. It supports direct mysqldump, LVM snapshots to tar files (mysqllvm),
+LVM snapshots with mysqldump (mysqldump-lvm), and xtrabackup methods to extract the data.
+The Holland framework supports a multitude of options and is highly configurable to address almost any backup situation. 
+Example configurations for each method are in the /usr/share/doc/holland/examples/ directory and can be copied to /etc/holland/backupsets/,
+as well as using the holland mk-config command to generate a base config for a named provider.
+

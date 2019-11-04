@@ -1,18 +1,67 @@
 Docker - utility to pack, ship and run any application as a lightweight container.
 
+
+commands:
 docker ps (show running containers)
 docker ps -a (show all containers)
 docker stats (running containers info)
 docker container prune (remove all stopped containers)
-
 docker images (show docker images)
 docker logs <container-id|container-name> (get logs from container)
 docker network ls (show all docker networks)
 docker volumes ls (show all docker volumes)
-docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+docker exec <container-id|container-name> (execute command in container)
+docker attach <container-id|container-name> (attach to a running container)
+dockr build -t <name> -f ./.dockerfile . (build docker image, -t - tag, -f - dockerfile to use)
+docker run (run container with specified arguments)
 
-docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable \ 
-        stress --vm 1 --vm-bytes 2000M --vm-hang 0                  
+arguments:
+-i (interactive, keep STDIN open)
+-t (allocate a pseudo-TTY)
+-p container-port:local-port (bind container port to local port)
+--rm (remove after stopped)
+--name (give container a name)
 -m 256m (set memory limit)
 --memory-swap 256m (set swap limit)
 --oom-kill-disable (hung container if it's memory consumption exceeds your -m VALUE, or otherwise it will be just killed by oom-killer)
+
+
+examples:
+docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 --vm-bytes 2000M --vm-hang 0 
+
+
+Docker Compose - tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application’s services.
+Then, with a single command, you create and start all the services from your configuration.
+docker-compose.yml - file that contains the configuration for creating the containers, exposing ports, binding volumes and
+connecting containers through networks required for your app to work.
+Compose preserves all volumes used by the services defined in the compose file, thus no data is lost when the containers are recreated using docker-compose up.
+
+commands:
+docker-compose up -d
+docker-compose down
+docker-compose start
+docker-compose stop
+docker-compose build
+docker-compose logs -f db
+docker-compose scale db=4
+docker-compose events
+docker-compose exec db bash
+
+docker-compose.yml looks like this:
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+    - "5000:5000"
+    volumes:
+    - .:/code
+    - logvolume01:/var/log
+    links:
+    - redis
+  redis:
+    image: redis
+volumes:
+  logvolume01: {}
+

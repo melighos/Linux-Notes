@@ -1,0 +1,75 @@
+Create a named routing table. As an example, I have used the name, "mgmt," below.
+
+echo '200 mgmt' >> /etc/iproute2/rt_tables
+
+Above, the kernel supports many routing tables and refers to these by unique integers numbered 0-255.
+A name, mgmt, is also defined for the table.
+
+Below, a look at a default '/etc/iproute2/rt_tables' follows, showing that some numbers are reserved.
+The choice in this answer of 200 is arbitrary; one might use any number that is not already in use, 1-252.
+
+#
+# reserved values
+#
+255     local
+254     main
+253     default
+0       unspec
+#
+# local
+#
+
+/etc/network/interfaces:
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The production network interface
+auto eth0
+allow-hotplug eth0
+# iface eth0 inet dhcp 
+# Remove the stanzas below if using DHCP.
+iface eth0 inet static
+  address 10.10.10.140
+  netmask 255.255.255.0
+  gateway 10.10.10.1
+
+# The management network interface
+auto eth1
+allow-hotplug eth1
+iface eth1 inet static
+  address 172.16.100.10
+  netmask 255.255.255.0
+  post-up ip route add 172.16.100.0/24 dev eth1 src 172.16.100.10 table mgmt
+  post-up ip route add default via 172.16.100.1 dev eth1 table mgmt
+  post-up ip rule add from 172.16.100.10/32 table mgmt
+  post-up ip rule add to 172.16.100.10/32 table mgmt
+
+Ubuntu18.04:
+
+
+RHEL/CentOS:
+/etc/sysconfig/network:
+NETWORKING=yes
+HOSTNAME=host.sld.tld
+GATEWAY=10.10.10.1
+
+/etc/sysconfig/network-scripts/ifcfg-eth1:
+DEVICE=eth1
+TYPE=Ethernet
+ONBOOT=yes
+NM_CONTROLLED=no
+BOOTPROTOCOL=none
+IPADDR=172.16.100.10
+NETMASK=255.255.255.0
+NETWORK=172.16.100.0
+BROADCAST=172.16.100.255
+
+/etc/sysconfig/network-scripts/route-eth1:
+172.16.100.0/24 dev eth1 table mgmt
+default via 172.16.100.1 dev eth1 table mgmt
+
+/etc/sysconfig/network-scripts/rule-eth1:
+from 172.16.100.0/24 lookup mgmt
+

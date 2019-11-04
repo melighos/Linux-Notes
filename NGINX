@@ -1,6 +1,117 @@
-NGINX -
+NGINX -free, open-source, high-performance HTTP server and reverse proxy, as well as an IMAP/POP3 proxy server.
 
-/var/www (contains a directory for each website)
+chown -R www:www /var/www (change ownership of nginx directory)
 
 Commands:
-nginx -t -c </path/to/nginx.conf> (check nginx config file)
+curl -I 127.0.0.1 (to check if nginx is locally running)
+nginx -t -c </path/to/nginx.conf> (check nginx config file, -t - test config for errors, -c - specify config file)
+nginx -s reload (reload configs to make use of changes,)
+
+Config:
+user www-data;   # nginx worker process
+worker_processes 8;     # number of worker treads(number of your cpu treads)
+error_log /var/log/nginx/error.log info;
+access_log /var/log/nginx/access.log;
+gzip on;    # compress css and java script files
+
+# `server` specific configurations can be be placed in the conf.d folder instead of main config
+server {
+listen: 80                                  # port nginx is listen at
+server_name: 81.7.14.132 or domain-name     # ip/domain of nginx web server
+index index.php index.html index.htm;   
+root /var/www;                              # nginx working directory
+}
+
+location / { try_files $uri $uri/ =404; }     # files location
+location ~ \.php$ { try_files $uri =404;            # php files location
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;   # 'split_path_info' to split the path on the PHP file
+                                                        # only path after file like'index.php' end up being used as the URL to the application
+            fastcgi_pass unix:/var/run/php-fpm.sock;    #
+            fastcgi_index index.php;                    # fastcgi - gateway interface protocol
+            fastcgi_param SCRIPT_FILENAME $request_filename; 
+            include fastcgi_params;                     # some extra parameters you might need when you’re using php-fpm
+}
+-------------------------------------------------------------------------------------------------------------------------
+location /static {                  # static files location
+   try_files $uri $uri/ =404;
+}
+
+location / {                        # If not a static directory, the Nginx will send it to your application,
+   proxy_pass 127.0.0.1:9000;       # here it is just going to proxy pass it to a gateway listening at local port 9000
+   proxy_param APPENV production;   # environmental variable in telling the application to run as production
+   include proxy_params;            # some extra parameters you usually want passed when you’re proxying requests
+}
+----------------------------------------------------------------------------------------------------------------------
+location /static {
+   try_files $uri $uri/ =404;
+}
+
+location / {
+   uwsgi_pass 127.0.0.1:9000;       # WSGI will take away an HTTP request, convert it to the correct protocol and then send it off to the gateway
+   uwsgi_param APPENV production;   # The gateway then talks to the application and sends back the response.
+   include uwsgi_params;
+}
+-----------------------------------------------------------------------------------------------------
+# good configuration for a load balancing:
+
+upstream app_example {  # to balance traffic between these servers whenever it gets some request, make an upstream, in this example it's called 'app_example'
+   zone backend 64k;    # reserving 64k of shared memory for Nginx to use for the health checks
+   least_conn;          # 'least_conn' is an algorithm that will tell Nginx to use to balance between the three servers
+   server 127.0.0.1:9000 max_fails=3 fail_timeout=30s;  # three web servers and they are listening to port 9000, 9001, and 9002 respectively
+   server 127.0.0.1:9001 max_fails=3 fail_timeout=30s;  # Nginx will send the request to the one with the least connections
+   server 127.0.0.1:9002 max_fails=3 fail_timeout=30s;  # servers can fail three times before it’s taken out of the rotation of servers
+}
+
+server { 
+   # usual stuff omitted
+
+   location / {
+       health_check;            # Health check will run checks against servers and if it finds a server has failed or is not responding
+       include proxy_params; 
+
+       proxy_pass http://app_example/; 
+       # Handle Web Socket connections
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection "upgrade";
+   } 
+}
+------------------------------------------------------------------------------------------------------------------------
+# http_upstream_module is used to define groups of servers that can be referenced by the proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass
+http {
+  upstream myproject {            # upstream defines a cluster that you can proxy requests to, all requests for / go to the any of the servers listed under it
+    server 127.0.0.1:8000 weight=3; 
+    server 127.0.0.1:8001;
+    server 127.0.0.1:8002;    
+    server 127.0.0.1:8003;
+  }
+
+  server {
+    listen 80;
+    server_name www.domain.com;
+    location / {
+      proxy_pass http://myproject;
+    }
+  }
+}
+----------------------------------------------------------------------------------------------------------------------
+# Here is a configuration for caching:
+
+proxy_cache_path /tmp/nginx levels=1:2 keys_zone=my_zone:10m inactive=60m; # where Nginx is going to store cache files
+                                                                           # 'levels=1:2' how to save files in that temp location, and to use MD5 hash
+                                                                           # also it will create some directories based on that to save files
+                                                                           # 'keys_zone' is named my_zone, and 10 megabytes (10m) of cache space is reserved
+                                                                           # 'inactive=60m' if file isn’t requested within 60 minutes it will be removed from cache
+proxy_cache_key "$scheme$request_method$host$request_uri";  # tells Nginx how to decide to cache a file
+
+server {
+   # Stuff Omitted
+   location / {
+       proxy_cache my_zone; #  proxy_cache named my_zone, which is the key thing to tell Nginx to cache the responses from requests made to this location block
+       add_header X-Proxy-Cache $upstream_cache_status; # determines if something is a proxy hit, proxy miss, or bypass
+       include proxy_params;
+       proxy_pass http://172.17.0.18:9000;
+   }
+}
+----------------------------------------------------------------------------------
+

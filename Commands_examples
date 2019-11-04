@@ -88,6 +88,7 @@ export http_proxy=http://your.proxy.server:port/ (set proxy environment variable
 export http_proxy=http://user:password@your-proxy-ip-address:port/ (set proxy environment variable with username and password)
 
 ip route add 192.168.200.0/24 via 127.0.0.1 (block IPs by null-routing, won't protect against most UDP attacks, packets from the remoute do reach the system)
+ip route add blackhole 192.168.0.195/32 (same as above)
 ip route flush cache (flush rout cache to get the new routing rules to be used)
 
 # check the private key and the certificate match
@@ -170,6 +171,8 @@ apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <p
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 -------------------------------------------------------------------------------------------
 dpkg:
+dpkg -i packagename (install package)
+dpkg -r packagename (remove package)
 dpkg --status <package> (detailed package info, includes created conffiles)
 dpkg -l (list all packages)
 dpkg --get-selections | grep "hold" (packages on hold)
@@ -282,6 +285,7 @@ grep -r --exclude="file" /where/to/search/ (exclude file)
 grep -r --exclude-dir=var "pattern" /where/to/search/ (exclude dir)
 grep  "word" -C 5/-A 5/-B 5 (-A number of lines to show after matching line, -B before, -C before and after)
 grep -A4 -B4 'yyyy-mm-dd' /path/to/file
+grep -E -v "80|443" | grep TCP (multiple word exclude and then search)
 
 egrep "(pattern1|pattern2|...)" somefile (multiple pattern grep)
 egrep --color "pattern1|pattern2|$" (colorized multiple pattern grep)
@@ -370,7 +374,7 @@ curl -x http://user:password@proxyhost:port site_to_connect.com (use proxy)
 
 ----------------------------------------------------------------------------------------
 iptables:
--t nat,filter (add rule to the specific table)
+-t NAT,Filter,Mangle (add rule to the specific table)
 -P CHAIN action (set the chain default policy)
 -A INPUT,OUTPUT (append rule to the specific chain, a chain is a group of rules)
 -j ACCEPT,REJECT,DROP (tells what to do if a packet matches the constraints specified in the previous arguments)
@@ -388,6 +392,7 @@ iptables:
 
 iptables -D "rule" (delete specific rule)
 iptables -F (clear all rules)
+iptables -t nat -X (-X deletes all empty non-default chains in a table)
 iptables -t table -F chain (clear all rules in chain)
 iptables -nvL --line-numbers (show current rules)
 iptables -S (show commands used to create your current rules)
@@ -401,8 +406,15 @@ iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE (NAT, -o eth1 - output inte
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to 172.31.0.23:80 (make local server(172.31.0.23) to be accessible from outside)
 iptables -A FORWARD -i eth0 -p tcp --dport 80 -d 172.31.0.23 -j ACCEPT (make NAT routing possible if FORWARD have the default rule to DROP)
 iptables -t raw -A PREROUTING -p tcp --sport 80 -j NOTRACK (bypass connection tracking, it is a security risk to disable tracking, unless you are already behind a stateful firewall)
+iptables -A OUTPUT -p tcp -m tcp --dport 443 -m state --state NEW -j ACCEPT (default output rule example)
+iptables -A OUTPUT -p tcp -m multiport --dports 2240,2257,2258 -m state --state NEW -j ACCEPT (multiport rule example)
+iptables -A OUTPUT -p udp -m udp --dport 67:68 -m state --state NEW -j ACCEPT (ports range example)
+iptables -A INPUT -i <interface> -p tcp -m multiport --source-port 80,443 -d $IPADDR ! --syn --dport 1024:65535 -j ACCEPT (example)
+iptables -t nat -A PREROUTING -p tcp -j BALANCE --to-destination <ip address>-<ip address> (BALANCE nat Table, BALANCE target uses a range of addresses)
 -----------------------------------------------------------------------------------
 ssh:
+ssh-copy-id username@remote-server.org (automatically copy your public key to authorized_keys of specified server)
+
 ssh -L 1234:localhost:2812 User@remotehost (tunnel with ssh, forwards the local port 1234 to the remote port 2812. -L - local forwarding, forward all connection attempts on local port to remote port on the remote host, which can be reached from the remote host machine)
 ssh -L 80:localhost:80 SUPERSERVER (connection made to the local port 80 is to be forwarded to port 80 on SUPERSERVER)
 
@@ -465,14 +477,22 @@ udevadm control --reload (If rules fail to reload automatically)
 KERNEL=="dri/card0", SUBSYSTEM=="drm", DRIVERS=="radeon", ATTR{device/power_dpm_force_performance_level}="high"
 --------------------------------------------------------------------------------------------------
 LXC:
-lxc-ls -f (list all installed LXC containers)
-lxc-create -n CONTAINER_NAME -t download -- --dist 'supported_distributive_name' --release current --arch amd64 (create new LXC container)
-lxc-start/lxc-stop -n CONTAINER_NAME (start/stop container)
-lxc-console -n CONTAINER_NAME (login into a container)
+lxc-checkconfig (show LXC kernel virtualization status)
+lxc-ls -f (list all created LXC containers)
+lxc-create -n CONTAINER_NAME -t download (create new LXC container)
+lxc-create -t download -n u1 -- --dist ubuntu --release bionic --arch amd64 (create new LXC container with more specified details)
+lxc-create -P /home/lxc -f lxc.conf (-P specify the directory where you want to create container, -f specify config file)
+lxc-start/stop -n CONTAINER_NAME -d (start/shutdown container, -d - start as daemon)
+lxc-freeze/unfreeze -n CONTAINER_NAME (temporary stop container work without shutting it down, then 'unfreeze' to start in back)
+lxc-console -n CONTAINER_NAME (login into a container, may not work for some containers, you need to "lxc-attach" and create the user first)
 lxc-attach -n CONTAINER_NAME --clear-env (attach to a container)
+lxc-destroy -n name (delete container)
 lxc-copy -n CONTAINER_NAME -N snap1 -B overlayfs -s (create snapshot of a specific container, which we will call "snap1")
 lxc-attach -n CONTAINER_NAME --clear-env -- sudo -u YOURUSER env DISPLAY=:0 PROGRAM_NAME (running Xorg programs)
+lxc-autostart -a (autostart all containers)
 
+lxc-create -t download -n unprivileged -- -d ubuntu -r trusty -a amd64 (download and create unprivileged container)
+lxc-start -n unprivileged -d (start unprivileged container)
 -------------------------------------------------------------------------------------
 cgroups:
 cgm create <controller> <cgroup>
@@ -484,7 +504,7 @@ chown user /sys/fs/cgroup/{memory,cpu}/groupname/* (change ownership in all cgro
 cgm movepid <controller> <cgroup> pid
 cgm movepid memory groupname $pid (move process to cgroup named groupname in controller memory)
 cgm movepid cpu groupname $pid_of_bash (move bash to cgroup named groupname in controller cpu)
-cgm setvalue memory groupname memory.limit_in_bytes 10000000 (limit the memory usage of all processes in this group to 10 MB, once tasks hit this limit, they will begin to swap)
+cgm setvalue memory groupname memory.limit_in_bytes 10000000 (limit the memory usage of all processes in this group to ~10 MB, once tasks hit this limit, they will begin to swap)
 echo 100 > /sys/fs/cgroup/cpu/groupname/foo/cpu.shares (CPU priority ("shares") of this group. By default all groups have 1024 shares. A group with 100 shares will get a ~10% portion of the CPU time)
 cgm setvalue freezer groupname freezer.state FROZEN (freeze cgroup named groupname)
 

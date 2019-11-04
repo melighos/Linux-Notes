@@ -82,6 +82,15 @@ CUPS - standards-based, open source printing system.
 rsync - open source utility that provides fast incremental file transfer, must be installed on both the source and the destination machine.
 Network file transfers use the SSH protocol by default and host can be a real hostname or a predefined profile/alias from .ssh/config.
 --------------------------------------------------------------------------------------------------------------------------------------
+System Calls:
+Fork(): it is used to create a new process
+Exec(): it is used to execute a new process
+Wait(): it is used to make the process to wait
+Exit(): it is used to exit or terminate the process
+Getpid(): it is used to find the unique process ID
+Getppid(): it is used to check the parent process ID
+Nice(): it is used to bias the currently running process property
+-----------------------------------------------------------------------------------
 GRUB(GRand Unified Bootloader) is a multi-boot loader.
 /etc/default/grub
 update-grub (update-grub is a stub for running 'grub-mkconfig -o /boot/grub/grub.cfg "$@"' to generate a grub2 config file), alternatively:
@@ -118,12 +127,16 @@ All, in all, the files in /proc will provide all information about a program:
 'status' different process info
 /proc/sys/ (system configuration information and interfaces)
 
-namespaces - wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource.  Changes to  the  global resource  are  visible  to  other processes that are members of the namespace, but are invisible to other processes.
+namespaces - partitions kernel resources such that one set of processes sees one set of resources while another set of processes sees a different set of resources.
+Makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. 
+Changes to  the  global resource  are  visible  to  other processes that are members of the namespace, but are invisible to other processes.
 /proc/[pid]/ns/xxx (containing one entry for each namespace that supports being manipulated by system call setns)
 /proc/[pid]/mounts (lists all the filesystems currently mounted in the process's mount namespace)
 /proc/[pid]/mountstats (exports information (statistics, configuration information) about the mount points in the process's mount namespace)
 
 cgroups(control groups) - Linux kernel feature to limit, police and account the resource usage for a set of processes. Compared to other approaches like the 'nice' command or /etc/security/limits.conf, cgroups are more flexible as they can operate on (sub)sets of processes (possibly with different system users)
+These groups can be hierarchical, meaning that each group inherits limits from its parent group.
+memory" controller limits memory use, "cpuacct" accounts CPU usage
 /sys/fs/cgroup/xxx (cgroups lists)
 /sys/fs/cgroup/memory/memory.oom_control: (OOM Killer notification and other controls)
 # If enabled (oom_kill_disable 0), tasks that attempt to consume more memory than they are allowed are immediately killed by the OOM killer.
@@ -189,8 +202,12 @@ cat /proc/sys/kernel/core_pattern  (where automatic core dumps go)
 /var/lib/systemd/coredump (possible core dumps location)
 
 Network configuration:
-/sys/class/net (network interfaces)
+/sys/class/net (kernel network interfaces info)
 /etc/network/interfaces (network interfaces configuration)
+/etc/sysconfig/network-scripts/<interface> (CentOS and FreeBSD)
+/etc/netplan/01-netcfg.yaml or 50-cloud-init.yaml (for ubuntu v.18.04+)
+If there is no file, generate it with "netplan generate", use "netplan apply" to apply recent changes.
+To go back to /network/interfaces file use "install ifupdown", and disable systemd-networkd.socket, instead enable "networking" service.
 /proc/sys/net/ipv4/ip_forward (current state of IP forwarding)
 echo 0(1) > /proc/sys/net/ipv4/ip_forward (temporary disable/enable the IP forwarding)
 /etc/sysctl.conf:
@@ -217,7 +234,7 @@ DNS - Domain Name System
 /etc/resolvconf/resolv.conf.d/head (File to be prepended to the dynamically generated resolver)
 /etc/resolvconf/resolv.conf.d/tail (File to be appended to the dynamically generated resolver)
 resolvconf -u (should be run after changes to /resolv.conf.d/head or tail)
-/etc/dnsmasq.conf 
+/etc/dnsmasq.conf
 
 NetworkManager - program for providing detection and configuration for systems to automatically connect to networks.
 /etc/NetworkManager/system-connections/* (Stored Connections file)
@@ -242,11 +259,14 @@ etc/ssh/sshd_config (config for ssh server)
 ~/.ssh/authorized_keys (in that file, public key needs to be concatenated on remote server)
 ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
 ssh-agent - program which caches your decrypted private keys and provides them to SSH client programs on your behalf.
+eval $(ssh-agent)
+ssh-add ~/.ssh/id_rsa (add key to ssh-agent cache)
+SSH_AUTH_SOCK=0 (to temporary solve problem with gnome-keyring)
 
 MTP - Media Transfer Protocol
-If you use gvfs, then mtp devices can be found in file manager under:
+If you use gvfs, then mtp devices can be found under:
 /run/user/$UID/gvfs/mtp* or /var/run/user/$UID/gvfs/
-For manual detect and connect(mtp-tools, mtpfs and libmtp needed):
+For manual detect and connect tools like mtp-tools, mtpfs and libmtp needed:
 mtp-detect (detect your device)
 mtp-connect (connect to your mtp device)
 mtp-folders (contained folders and their IDs)
@@ -282,11 +302,32 @@ In addition, Linux allows mounts to be declared as shared, slave, private or unb
 
 LXC - operating-system-level virtualization method for running multiple isolated Linux systems (containers) on a single control host (LXC host).
 It does not provide a virtual machine, but rather provides a virtual environment that has its own CPU, memory, block I/O, network, etc. space and the resource control mechanism.
-/etc/lxc/default.conf (default config)
-/etc/lxc/containername/config (specific container config)
+/etc/lxc/default.conf (system default config for containers)
+/etc/lxc/lxc.conf (system lxc config, may not be present by default, need to create)
+/var/lib/lxc/<container>/config (default path for containers)
+/usr/share/lxc/templates/ (available template shall-scripts)
+You can edit templates scripts to change what packages will be downloaded on container creation.
+You could also edit content in $container/rootfs directory which is container '/'.
+$container/config (container specific default config)
+container config options(lxc.conf):
+lxc.net.[i].ipv4.address = 192.168.1.123/24 (Specify the ipv4 address to assign to the virtualized interface)
+lxc.start.auto 0/1 (Whether the container should be auto-started)
+system lxc options(lxc.conf):
+xc.lxcpath = /path/to/lxc (specify path for containers)
+Unprivileged Containers(needs 'uidmap' package):
+useradd lxcuser (add new user)
+usermod --add-subuids 100000-165536 lxcuser (map range of host system subuids to lxcuser)
+usermod --add-subgids 100000-165536 lxcuser (map range of host system subgids to lxcuser)
+mkdir ~/.config/lxc/default.conf (create default config for userspace unprivileged containers)
+/.config/lxc/default.conf:
+#lxc.network.hwaddr = 00:16:3e:xx:xx:xx
+lxc.id_map = u 0 100000 165536 (adjust values to what you use in subuids)
+lxc.id_map = g 0 100000 165536 (adjust values to what you use in subgids)
+/etc/lxc/lxc-usernet:
+lxcuser veth lxcbr0 10 (add rights for lxcuser)
 
-Nagios - 
-
+Nagios - open source host, service and network monitoring program. It monitors specified hosts and services, alerting you to any developing issues,
+errors or improvements.
 1.Active and Passive check in Nagios:
 Active checks are initiated and performed by Nagios:
 active checks are initiated by the Nagios process.
@@ -301,13 +342,4 @@ Since these public resources are not usually exposed to external machines, NRPE 
 LD_LIBRARY_PATH - Environment variable, colon-separated set of directories where libraries should be searched for first, before the standard set of directories.
 This is useful when debugging a new library or using a nonstandard library for special purposes.
 
-----------------------------------------------------------------------------------------
-System Calls:
-Fork(): it is used to create a new process
-Exec(): it is used to execute a new process
-Wait(): it is used to make the process to wait
-Exit(): it is used to exit or terminate the process
-Getpid(): it is used to find the unique process ID
-Getppid(): it is used to check the parent process ID
-Nice(): it is used to bias the currently running process property
 

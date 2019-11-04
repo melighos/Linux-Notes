@@ -52,6 +52,7 @@ nstat (connection info)
 nmap (network monitoring tool)
 lsof (list open files: regular file, directory, library, stream or a network file)
 ss -atun (listening ports, -p to show process names)
+ss -tulpn
 netstat -tulpn (listening ports, network connections, routing tables(old))
 netstat -rn | grep 0.0.0.0 (route info(old))
 lspci -nnk | grep -iA2 net (network controllers info)
@@ -173,6 +174,7 @@ Files and Directories:
 ls -l (list files and folders)(ls -lc(change time),ls -lu(modification time))
 du -sh "file" (human readable size)
 du -ah | sort -rh (size of the current directory, subdirectories and files(-a - all,-h - human))
+du -h -d 1 (-d -depth)
 ls -R, ls -mR *
 stat 'filename' (file metadata info(time-stamps, ownership, permissions, size and inode number))
 file 'filename' (file type details)
