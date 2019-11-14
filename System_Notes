@@ -27,16 +27,17 @@ initramfs(initial RAM filesystem) - the initial root filesystem, bootstrap the s
 Init - first process started during system boot and continues running until the system is shut down. Started by the kernel using a hard-coded filename.
 Init is the direct or indirect ancestor of all other processes, and automatically adopts all orphaned processes.
 
-processes - running instance of a program, also called a task. Each process is given a unique number: a process identification number (PID).
+Processes - running instance of a program, also called a task. Each process is given a unique number: a process identification number (PID).
 When a process is running, it can spawn other processes. This is accomplished through the 'fork' system call.
 When a process spawns a new process, it first duplicates itself, which then transforms into the new process, which can also create new processes.
 Every process consists of: system resources that are allocated to it, section of memory, security attributes, such as its owner and its set of permissions
 and the processor state(processor state includes the contents of its registers and their physical memory addresses).
+Each process is started with a single thread, often called the primary thread, but can create additional threads from any of its threads.
 
-thread - different from processes in that threads run in shared memory space, whereas processes run in their own separate memory spaces.
-Threads also exist within processes and share that processes virtual address space and resources.
-Threads also have unique properties: exception handlers, scheduling priority, thread local storage, unique identifier
-and set of structures the system can use to save the thread context.
+Thread - entity within a process that can be scheduled for execution
+Threads exist within processes and share that processes virtual address space and resources.
+Threads have unique properties: exception handlers, scheduling priority, thread local storage, unique identifier and set of structures the system can use to save the thread context.
+Thread is different from processes in that threads run in shared memory space, whereas processes run in their own separate memory spaces.
 
 daemons - special class of processes that run exclusively in the background. daemons are usually launched automatically and stay in the background
 until their services are required.
@@ -124,13 +125,27 @@ All, in all, the files in /proc will provide all information about a program:
 'fd' directory contains links to currently open files(file descriptors) (including standard input, output and error).
 'fdinfo' contains one file corresponding to each open file, which tells you the current position for reading or writing.
 'io' contains I/O statistics for the process
-'status' different process info
+'self' when a process accesses this magic symbolic link, it resolves to the process's own /proc/[pid] directory
+'task/[tid]' contain corresponding information about each of the threads in the process
+'status' different process info: state, PPid, number of Threads.
 /proc/sys/ (system configuration information and interfaces)
 
 namespaces - partitions kernel resources such that one set of processes sees one set of resources while another set of processes sees a different set of resources.
 Makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. 
 Changes to  the  global resource  are  visible  to  other processes that are members of the namespace, but are invisible to other processes.
-/proc/[pid]/ns/xxx (containing one entry for each namespace that supports being manipulated by system call setns)
+Namespaces do not restrict access to physical resources such as CPU, memory and disk. That access is metered and restricted by a kernel ‘cgroups’.
+Each process is associated with a namespace and can only see or use the resources associated with that namespace, and descendant namespaces where applicable.
+This way each process (or process group thereof) can have a unique view on the resources.
+Which resource is isolated depends on the kind of namespace that has been created for a given process group. There are 7 kinds of namespaces:
+    Mount - isolate filesystem mount points
+    UTS - isolate hostname and domainname, allow a single system to appear to have different host and domain names to different processes.
+    IPC - isolate interprocess communication (IPC) resources
+    PID - isolate the PID number space, provides processes with an independent set of process IDs (PIDs) from other namespaces.
+    Network - isolate network interfaces, it will have a private set of IP addresses, routing table, socket listing, connection tracking table, etc...
+    User - isolate UID/GID number spaces
+    Cgroup - isolate cgroup root directory, hides the identity of the control group of which process is a member.
+/proc/[pid]/ns/* (process nemespaces, uniquely identifies each namespace by the inode number pointed to by one of its symlinks)
+/proc/[pid]/task/[tid]/ns/* (process threads nemespaces)
 /proc/[pid]/mounts (lists all the filesystems currently mounted in the process's mount namespace)
 /proc/[pid]/mountstats (exports information (statistics, configuration information) about the mount points in the process's mount namespace)
 
@@ -139,8 +154,10 @@ These groups can be hierarchical, meaning that each group inherits limits from i
 memory" controller limits memory use, "cpuacct" accounts CPU usage
 /sys/fs/cgroup/xxx (cgroups lists)
 /sys/fs/cgroup/memory/memory.oom_control: (OOM Killer notification and other controls)
-# If enabled (oom_kill_disable 0), tasks that attempt to consume more memory than they are allowed are immediately killed by the OOM killer.
-# When the OOM killer is disabled, tasks that attempt to use more memory than they are allowed are paused until additional memory is freed.
+/proc/[pid]/cgroup (process cgroups membership)
+/proc/[pid]/task/[tid]/cgroup (process threads cgroups membership)
+# If enabled (oom_kill_disable 0), tasks that attempt to consume more memory than they are allowed, will be immediately killed by the OOM killer.
+# When the OOM killer is disabled, tasks that attempt to use more memory than they are allowed, will be paused until additional memory is freed.
 # under_oom entry reports the value 1 If the cgroup is out of memory and tasks in it are paused.
 
 udev - device manager for the Linux kernel.
@@ -206,8 +223,8 @@ Network configuration:
 /etc/network/interfaces (network interfaces configuration)
 /etc/sysconfig/network-scripts/<interface> (CentOS and FreeBSD)
 /etc/netplan/01-netcfg.yaml or 50-cloud-init.yaml (for ubuntu v.18.04+)
-If there is no file, generate it with "netplan generate", use "netplan apply" to apply recent changes.
-To go back to /network/interfaces file use "install ifupdown", and disable systemd-networkd.socket, instead enable "networking" service.
+# If there is no file, generate it with "netplan generate", use "netplan apply" to apply recent changes.
+# To go back to /network/interfaces file use "install ifupdown", and disable systemd-networkd.socket, instead enable "networking" service.
 /proc/sys/net/ipv4/ip_forward (current state of IP forwarding)
 echo 0(1) > /proc/sys/net/ipv4/ip_forward (temporary disable/enable the IP forwarding)
 /etc/sysctl.conf:
@@ -230,6 +247,7 @@ sysctl -w net.netfilter.nf_conntrack_max=65535 (change max number of possible co
 /proc/sys/net/netfilter/nf_conntrack_count (current count of connection tracking)
 
 DNS - Domain Name System
+/etc/hosts (known hosts)
 /etc/resolv.conf
 /etc/resolvconf/resolv.conf.d/head (File to be prepended to the dynamically generated resolver)
 /etc/resolvconf/resolv.conf.d/tail (File to be appended to the dynamically generated resolver)
@@ -299,45 +317,6 @@ bind mount - mounting creates a view of a storage device as a directory tree. A 
 A Linux bind mount is mostly indistinguishable from the original. The command df -T /else/where shows the same device and the same filesystem type as df -T /some/where. The files /some/where/foo and /else/where/foo are indistinguishable, as if they were hard links. It is possible to unmount /some/where, in which case /else/where remains mounted.
 If there are mount points under /some/where, their contents are not visible under /else/where. Instead of bind, you can use rbind, also replicate mount points underneath /some/where.
 In addition, Linux allows mounts to be declared as shared, slave, private or unbindable. This affects whether that mount operation is reflected under a bind mount that replicates the mount point.
-
-LXC - operating-system-level virtualization method for running multiple isolated Linux systems (containers) on a single control host (LXC host).
-It does not provide a virtual machine, but rather provides a virtual environment that has its own CPU, memory, block I/O, network, etc. space and the resource control mechanism.
-/etc/lxc/default.conf (system default config for containers)
-/etc/lxc/lxc.conf (system lxc config, may not be present by default, need to create)
-/var/lib/lxc/<container>/config (default path for containers)
-/usr/share/lxc/templates/ (available template shall-scripts)
-You can edit templates scripts to change what packages will be downloaded on container creation.
-You could also edit content in $container/rootfs directory which is container '/'.
-$container/config (container specific default config)
-container config options(lxc.conf):
-lxc.net.[i].ipv4.address = 192.168.1.123/24 (Specify the ipv4 address to assign to the virtualized interface)
-lxc.start.auto 0/1 (Whether the container should be auto-started)
-system lxc options(lxc.conf):
-xc.lxcpath = /path/to/lxc (specify path for containers)
-Unprivileged Containers(needs 'uidmap' package):
-useradd lxcuser (add new user)
-usermod --add-subuids 100000-165536 lxcuser (map range of host system subuids to lxcuser)
-usermod --add-subgids 100000-165536 lxcuser (map range of host system subgids to lxcuser)
-mkdir ~/.config/lxc/default.conf (create default config for userspace unprivileged containers)
-/.config/lxc/default.conf:
-#lxc.network.hwaddr = 00:16:3e:xx:xx:xx
-lxc.id_map = u 0 100000 165536 (adjust values to what you use in subuids)
-lxc.id_map = g 0 100000 165536 (adjust values to what you use in subgids)
-/etc/lxc/lxc-usernet:
-lxcuser veth lxcbr0 10 (add rights for lxcuser)
-
-Nagios - open source host, service and network monitoring program. It monitors specified hosts and services, alerting you to any developing issues,
-errors or improvements.
-1.Active and Passive check in Nagios:
-Active checks are initiated and performed by Nagios:
-active checks are initiated by the Nagios process.
-active checks are run on a regularly scheduled basis.
-Passive checks are performed by external applications and useful for monitoring services that are:
-asynchronous in nature and cannot be monitored effectively by polling their status on a regularly scheduled basis.
-located behind a firewall and cannot be checked actively from the monitoring host.
-2.Nagios Remote Plugin Executor(NRPE) - addon is designed to allow you to execute Nagios plugins on remote Linux/Unix machines.
-The main reason for doing this is to allow Nagios to monitor "local" resources (like CPU load, memory usage, etc.) on remote machines.
-Since these public resources are not usually exposed to external machines, NRPE must be installed on the remote Linux/Unix machines.
 
 LD_LIBRARY_PATH - Environment variable, colon-separated set of directories where libraries should be searched for first, before the standard set of directories.
 This is useful when debugging a new library or using a nonstandard library for special purposes.

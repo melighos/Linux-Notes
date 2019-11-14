@@ -1,0 +1,12 @@
+Absolute minimum systemd service unit:
+/etc/systemd/system/servicename.service
+
+[Unit]
+After=mysql.service                             # After: Instructs systemd on when the script should be run. Other example could be network.target
+
+[Service]
+ExecStart=/usr/local/bin/disk-space-check.sh    # ExecStart: This field provides a full path the actual script to be execute
+
+[Install]
+WantedBy=default.target                         # WantedBy: Into what boot target the systemd unit should be installed
+

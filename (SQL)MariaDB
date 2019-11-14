@@ -1,21 +1,44 @@
 MariaDB - reliable, high performance and full-featured database server which aims to be an 'always Free, backward compatible, drop-in' replacement of MySQL.
 For security reasons, the systemd service file contains ProtectHome=true, which prevents MariaDB from accessing files under the /home, /root and /run/user hierarchies. The datadir has to be in an accessible location and owned by the mysql user and group.
+The MySQL logs are determined by the global variables.
 /etc/my.cnf /etc/my.cnf.d/ ~/.my.cnf (config files location)
 /etc/my.cnf.d/server.cnf:
 #skip-networking                    (enable access your MySQL server from other LAN hosts)
 bind-address = <some ip-address>
 port=3360                           (you can add setting to run database on non-standard port)
 
+/etc/my.cnf:
+[mariadb]
+...
+log_warnings=4 (log verbosity)
+log_error=/var/log/mysql/mariadb.err (set up error log path)
+general_log                                     (enabling logs, and set path for them)
+general_log_file=/var/log/mysql/mariadb.log
+slow_query_log
+slow_query_log_file=/var/log/mysql/mariadb-slow.log
+
 commands:
 mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql (script to set up MariaDB, run the following command before starting the mariadb.service)
 mysql --version (version of MySQL or MariaDB database)
 mysql_secure_installation (command will interactively guide you through a number of recommended security measures)
 mysqlcheck -A --auto-repair -f -o -u root -p (Forcefully optimize all tables, automatically fixing table errors that may come up)
-mysql -u root -p (enter your MySQL as root user) # If you haven’t set a password for your MySQL root user, you can omit the -p switch
-mysql_upgrade -u root -p (upgrade databases)
+mysql -u root -p (enter your MySQL as root user, -p[password]) # If you haven’t set a password for your MySQL root user, you can omit the -p switch
+mysql_upgrade -u root -p (upgrade databases, -p[password])
+mysql -u root -p -e 'show full processlist' (which process holds a particular connection to a MySQL database)
 
-MySQL commands:
-mysql> CREATE USER 'myuser' IDENTIFIED BY 'mypassword'; (create new user and give him password)
+mysql -se "SHOW VARIABLES" (show mysql variables)
+mysql -se "SHOW VARIABLES" | grep -e log_error -e general_log -e slow_query_log (show variables related to logs)
+
+mysqladmin — Client for Administering a MySQL Server
+mysqladmin --verbose processlist (which process holds a particular connection to a MySQL database)
+mysqladmin status (Display a server status message)
+mysqladmin debug (Tell the server to write debug information to the error log)
+mysqladmin extended-status (Display the server status variables and their values)
+mysqladmin variables (Display the server system variables and their values)
+
+inner commands:
+mysql> show full processlist; (which process holds a particular connection to a MySQL database)
+mysql> CREATE USER 'myuser'@'localhost' IDENTIFIED BY 'mypassword'; (create new user and give him password)
 mysql> CREATE USER 'newuser'@'10.8.0.5' IDENTIFIED BY 'user_password'; (grant created user access from another host)
 mysql> CREATE USER 'newuser'@'%' IDENTIFIED BY 'user_password'; (create a user that can connect from any host, use the '%')
 
@@ -35,6 +58,11 @@ mysql> GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'my_opt
 mysql> REVOKE ALL PRIVILEGES ON database_name.* TO 'database_user'@'localhost'; (remove privileges)
 mysql> FLUSH PRIVILEGES (Apply changes to assigned permissions)
 
+mysql> SHOW VARIABLES LIKE 'log_error'; (show error log location)
+mysql> SET GLOBAL general_log = 1; (enable general log)
+mysql> set global general_log_file = '/var/log/mysql/mysql.log';
+mysql> SET GLOBAL slow_query_log = 1; (enable slow_query log)
+mysql> set global slow_query_log_file = '/var/log/mysql-slow.log';
 -------------------------------------------------------------
 Commonly used privileges are:
     ALL PRIVILEGES – Grants all privileges to a user account.
@@ -44,6 +72,8 @@ Commonly used privileges are:
     INSERT - The user account is allowed to insert rows into a specific table.
     SELECT – The user account is allowed to read a database.
     UPDATE - The user account is allowed to update table rows.
+    PROCESS - Enables display of information about the threads executing within the server
+    USAGE - This privilege specifier stands for “no privileges.”
 -------------------------------------------------------------------------------
 mysql> SHOW GRANTS FOR 'database_user'@'localhost'; (show user permissions)
 mysql> SELECT User, Host FROM 'mysql.user' WHERE Host <> 'localhost'; (Check current users with remote access privileged)
@@ -66,16 +96,18 @@ user=mysqluser
 password=secret
 
 Example script:
-#!/bin/bash
 
 THISDIR=$(dirname $(readlink -f "$0"))
 
 mysqldump --single-transaction --flush-logs --master-data=2 --all-databases \
- | gzip > $THISDIR/db_backup.gz
+| gzip > $THISDIR/db_backup.gz
 echo 'purge master logs before date_sub(now(), interval 7 day);' | mysql
 ------------------------------------------------------
 mysqldump --single-transaction --flush-logs --master-data=2 --all-databases -u root -p | gzip > all_databases.sql.gz (create and compress SQL tables backup)
 zcat all_databases.sql.gz | mysql -u root -p (Decompressing the backup thus created and reloading it in the server)
+mysql -u root -p mysql-data < mysql-data-backup.sql (same but for uncompressed backup)
+
+mysqldump --opt db_name | mysql --host=remote_host -C db_name (populating databases by copying data from one MySQL server to another)
 
 ------------------------------------------------------------------------------------------------
 Holland Backup:
@@ -84,4 +116,24 @@ LVM snapshots with mysqldump (mysqldump-lvm), and xtrabackup methods to extract 
 The Holland framework supports a multitude of options and is highly configurable to address almost any backup situation. 
 Example configurations for each method are in the /usr/share/doc/holland/examples/ directory and can be copied to /etc/holland/backupsets/,
 as well as using the holland mk-config command to generate a base config for a named provider.
+
+------------------------------------------------------------------------------------------
+database and table operations:
+mysql> USE table; (switch input to database)
+MariaDB [database]> CREATE TABLE tablename(          (create table in database with specific columns)
+ -> id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    -> first_name VARCHAR(20) NOT NULL,
+    -> last_name VARCHAR(20) NOT NULL,
+    -> birth DATE NOT NULL,
+    -> PRIMARY KEY(id)
+    -> );
+
+MariaDB [database]> INSERT INTO tablename(first_name, last_name, birth) VALUES      (insert data in to the table)
+    -> ('Stanley', 'Kubrik', '1928-07-26'),
+    -> ('Jeffrey', 'Adams', '1966-06-27'),
+    -> ('Alfred', 'Hitchcock', '1899-08-13');
+
+
+------------------------------------------------------------------------------------------
+Engines:
 

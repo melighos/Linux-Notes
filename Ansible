@@ -1,0 +1,120 @@
+Ansible - radically simple IT automation engine that automates cloud provisioning, configuration management, application deployment, intra-service orchestration.
+
+ansible.cfg in the current directory,
+.ansible.cfg in the home directory or
+/etc/ansible/ansible.cfg whichever it finds first.
+
+Commands:
+ansible all -m ping (Check if all the nodes listed in the inventory are alive)
+ansible-playbook --ask-become-pass syu.yml (run the playbook script, use password to login)
+ansible-playbook -i hosts site.yml (run the playbook script, -i use specific host file)
+ansible-playbook -i staging deploy.yml (same as above but "staging" is directory now)
+---------------------------------------------------------
+Infrastructure is listed in the Ansible inventory file, you can specify a different inventory file using the -i command line switch.
+/etc/ansible/hosts
+
+[testhosts]
+
+# this is my example LXC container
+10.0.3.152
+
+###################
+# mail.example.com
+
+# [webservers]
+# foo.example.com
+# bar.example.com
+
+# [dbservers]
+# one.example.com
+# two.example.com
+# three.example.com
+---------------------------------------------------------------
+Playbooks are the main organizational unit to configure and deploy the whole infrastructure. They are collection of tasks slit in to different roles.
+
+group_vars/ (hold files with all your variables)
+    all
+    database (different sets of variables)
+
+hosts (inventory file, list of hosts, can be a text file with listed hosts or a script that will finds all needed hosts)
+
+roles/ (rule-sets used by playbooks)
+    common/  (specific rule-set structure)
+        files/ (standard files to copy to target machine)
+            myserver.py
+        handlers/ (restarting services)
+            main.yml
+        tasks/ (configuration management, install stuff, create user)
+            main.yml
+        templates/ (file templates, used by template module for substitution)
+            sshdconfig.jinja2
+            config.py.jinja2
+        meta/ (specify role dependencies, this rule will be dependent on other rules)
+            main.yml
+
+site.yml (playbook run file)
+
+
+Ansible inventory can be a directory:
+
+staging/
+    hosts
+    group_vars/..
+    host_vars/..
+
+Dependencies file:
+
+---
+dependencies:
+ - common
+ - nginx
+ - uwsgi
+-----------------------------------------------------------------
+playbook.yml (Example of basic playbook)
+--
+- hosts : database                          # group of hosts on what we will be operate
+  vars:
+    fixes_name: fixes.sql                   # specify variable
+
+  tasks:
+  - name: Install MYSQL                     # name of the specific task
+    apt: name=mysql-server state =present   # action
+
+  - name: Copy fixes
+    copy: src={{fixes_name}}                # variable use
+        dest=/tmp/{{fixes_name}}
+
+  tasks:
+  - name: Install packeges
+    apt: name={{item}} state present        # using variable for simple loop
+    which_items:                            # variable description, install all mentioned packages
+        - python
+        - python-pip
+        - vim
+
+- hosts: all
+  vars:                                     # same as above but using predefined vars
+    packages:
+        - python
+        - python-pip
+        - vim
+
+  tasks:
+  - name: Install packages
+    apt: name={{item}} state present
+    which_items: packages
+-----------------------------------------------
+Generally you want your variables and tasks to be in a separate files and directories:
+
+site.yml:
+--
+- hosts: webservers
+  roles:
+    - common
+    - webserver
+
+- hosts: database
+  roles:
+    - common
+    - mysql
+

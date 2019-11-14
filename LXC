@@ -1,0 +1,51 @@
+LXC - operating-system-level virtualization method for running multiple isolated Linux systems (containers) on a single control host (LXC host).
+It does not provide a virtual machine, but rather provides a virtual environment that has its own CPU, memory, block I/O, network, etc. space and the resource control mechanism.
+/etc/lxc/default.conf (system default config for containers)
+/etc/lxc/lxc.conf (system lxc config, may not be present by default, need to create)
+/var/lib/lxc/<container>/config (default path for containers)
+/usr/share/lxc/templates/ (available template shall-scripts)
+
+You can edit templates scripts to change what packages will be downloaded on container creation.
+/usr/share/lxc/templates
+You could also edit content in <container_name>/rootfs directory which is container '/'.
+
+<container_name>/config (container specific default config)
+container config options(lxc.conf):
+lxc.net.0.ipv4.address = 192.168.1.123/24 (Specify the ipv4 address to assign to the virtualized interface)
+lxc.net.0.ipv4.gateway = auto (Specify the ipv4 address to use as the gateway inside the container, 'auto' to use bridge IP)
+lxc.net.0.link = lxcbr0 (Specify the interface to be used for real network traffic)
+lxc.net.[i].name = eth0 (interface name inside container)
+lxc.start.auto 0/1 (Whether the container should be auto-started)
+
+system lxc options(lxc.conf):
+lxc.lxcpath = /path/to/lxc (specify path to where store containers)
+
+Unprivileged Containers(needs 'uidmap' package):
+useradd lxcuser (add new user)
+usermod --add-subuids 100000-165536 lxcuser (map range of host system subuids to lxcuser)
+usermod --add-subgids 100000-165536 lxcuser (map range of host system subgids to lxcuser)
+mkdir ~/.config/lxc/default.conf (create default config for userspace unprivileged containers)
+/.config/lxc/default.conf:
+#lxc.network.hwaddr = 00:16:3e:xx:xx:xx
+lxc.id_map = u 0 100000 165536 (adjust values to what you use in subuids)
+lxc.id_map = g 0 100000 165536 (adjust values to what you use in subgids)
+/etc/lxc/lxc-usernet:
+lxcuser veth lxcbr0 10 (add rights for lxcuser)
+
+commands:
+lxc-checkconfig (show LXC kernel virtualization status)
+lxc-ls -f (list all created LXC containers)
+lxc-create -n CONTAINER_NAME -t download (create new LXC container)
+lxc-create -t download -n u1 -- --dist ubuntu --release bionic --arch amd64 (create new LXC container with more specified details)
+lxc-create -P /home/lxc -f lxc.conf (-P specify the directory where you want to create container, -f specify config file)
+lxc-start/stop -n CONTAINER_NAME -d (start/shutdown container, -d - start as daemon)
+lxc-freeze/unfreeze -n CONTAINER_NAME (temporary stop container work without shutting it down, then 'unfreeze' to start in back)
+lxc-console -n CONTAINER_NAME (login into a container, may not work for some containers, you need to "lxc-attach" and create the user first)
+lxc-attach -n CONTAINER_NAME --clear-env (attach to a container)
+lxc-destroy -n name (delete container)
+lxc-copy -n CONTAINER_NAME -N snap1 -B overlayfs -s (create snapshot of a specific container, which we will call "snap1")
+lxc-attach -n CONTAINER_NAME --clear-env -- sudo -u YOURUSER env DISPLAY=:0 PROGRAM_NAME (running Xorg programs)
+lxc-autostart -a (autostart all containers)
+
+lxc-create -t download -n unprivileged -- -d ubuntu -r trusty -a amd64 (download and create unprivileged container)
+lxc-start -n unprivileged -d (start unprivileged container)

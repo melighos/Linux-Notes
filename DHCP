@@ -1,0 +1,56 @@
+Dynamic Host Configuration Protocol (DHCP) is a network management protocol used on UDP/IP networks whereby a DHCP server dynamically assigns an IP address and other network configuration parameters to each device on a network so they can communicate with other IP networks.[1] A DHCP server enables computers to request IP addresses and networking parameters automatically from the Internet service provider (ISP), reducing the need for a network administrator or a user to manually assign IP addresses to all network devices.[1] In the absence of a DHCP server, a computer or other device on the network needs to be manually assigned an IP address, or to assign itself an APIPA address, which will not enable it to communicate outside its local subnet. 
+
+When setting up a new DHCP server, you must also make sure that an empty lease database file has been created.
+It’s usually somewhere underneath /var.
+
+To set up the dhcpd.conf file, you need the following information:
+1.The subnets for which dhcpd should manage IP addresses, and the ranges of addresses to dole out
+2.A list of static IP address assignments you want to make (if any), along with the MAC (hardware) addresses of the recipients
+3.The initial and maximum lease durations, in seconds
+4.Any other options the server should pass to DHCP clients: netmask, default route, DNS domain, name servers, etc.
+
+Every subnet must be declared, even if no DHCP service is provided on it, so this dhcpd.conf file contains a dummy entry for the external interface.
+-------------------------------------------------------------------
+Example:
+
+# option definitions common to all supported networks...
+option domain-name "elga";
+option domain-name-servers 10.0.0.1;
+option routers 10.0.0.1;
+default-lease-time 600;
+max-lease-time 7200;
+
+subnet 10.0.0.0 netmask 255.255.255.0 {
+	range 10.0.0.10 10.0.0.99;
+}
+
+subnet 209.180.151.0 netmask 255.255.255.0 {
+}
+
+host server {
+	hardware ethernet 00:0c:29:27:8b:32;
+	fixed-address 10.0.0.100;
+	option host-name "server";
+}
+
+host space {
+	hardware ethernet 00:1A:4D:4E:1F:88;
+        fixed-address 10.0.0.1;
+        option host-name "space";
+}
+
+host gendalf {
+	hardware ethernet 08:00:07:12:34:56;
+        fixed-address gendalf.synack.net;
+}
+----------------------------------------------------------
+Unless you make static IP address assignments such as the one for gandalf above, you need to consider how your DHCP configuration interacts with DNS.
+The easy option is to assign a generic name to each dynamically leased address (e.g., dhcp1.synack.net) and allow the names of individual machines
+to float along with their IP addresses.
+Alternatively, you can configure dhcpd to update the DNS database as it hands out addresses.
+The dynamic update solution is more complicated, but it has the advantage of preserving each machine’s hostname.
+
+dhcrelay listens for DHCP requests on local networks and forwards them to a set of remote DHCP servers that you specify.
+It’s handy both for centralizing the management of DHCP service and for provisioning backup DHCP servers.
+
+

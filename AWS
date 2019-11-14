@@ -1,0 +1,84 @@
+Amazon Web Services(AWS) - subsidiary of Amazon that provides on-demand cloud computing platforms and APIs to individuals, companies, and governments.
+The AWS technology is implemented at server farms throughout the world.
+
+Amazon EC2 instance (virtual machine):
+Amazon Elastic Compute Cloud (EC2) forms a central part of Amazon.com's cloud-computing platform, by allowing users to rent virtual computers on which to run their own computer applications. EC2 encourages scalable deployment of applications by providing a web service through which a user can boot an Amazon Machine Image (AMI) to configure a virtual machine, which Amazon calls an "instance", containing any software desired.
+
+New C5 family of instances that were based on a custom architecture around the KVM hypervisor, called Nitro. Each virtual machine, called an "instance", functions as a virtual private server(VPS).
+
+An EC2 instance may be launched with a choice of two types of storage for its boot disk or "root device." 
+The first option is a local "instance-store" disk as a root device. Instance-store volumes are temporary storage, which survive rebooting an EC2 instance, but when the instance is stopped or terminated (e.g., by an API call, or due to a failure), this store is lost. 
+The second option is to use an EBS volume as a root device. EBS volumes provide persistent storage independent of the lifetime of the EC2 instance.
+
+The Amazon Elastic Block Store (EBS) provides raw block devices that can be attached to Amazon EC2 instances. These block devices can then be used like any raw block device. In a typical use case, this would include formatting the device with a filesystem and mounting it. In addition, EBS supports a number of advanced storage features, including snapshotting and cloning. EBS volumes can be up to 16TB in size. EBS volumes are built on replicated storage, so that the failure of a single component will not cause data loss.
+Another possible use is the creation of RAID arrays by combining two or more EBS volumes. RAID allows increases of speed and/or reliability of EBS.
+The volumes support snapshots, which can be taken from a GUI tool or the API. EBS volumes can be attached or detached from instances while they are running, and moved from one instance to another.
+
+Amazon's elastic IP address feature is similar to static IP address in traditional data centers, with one key difference. A user can programmatically map an elastic IP address to any virtual machine instance without a network administrator's help and without having to wait for DNS to propagate the binding. In this sense an Elastic IP Address belongs to the account and not to a virtual machine instance. It exists until it is explicitly removed, and remains associated with the account even while it is associated with no instance.
+
+Amazon CloudWatch is a web service that provides real-time monitoring to Amazon's EC2 customers on their resource utilization such as CPU, disk, network, available memory information and replica lag for RDS Database replicas. The data is aggregated and provided through AWS management console. It can also be accessed through command line tools and Web API's, if the customer desires to monitor their EC2 resources through their enterprise monitoring software. Amazon provides an API which allows to operate on CloudWatch alarms.
+
+Amazon's auto-scaling feature of EC2 allows it to automatically adapt computing capacity to site traffic. The schedule-based (e.g. time-of-the-day) and rule-based (e.g. CPU utilization thresholds) auto scaling mechanisms are easy to use and efficient for simple applications. However, one potential problem is that VMs may take up to several minutes to be ready to use, which are not suitable for time critical applications. The VM startup time are dependent on image size, VM type, data center locations, etc.
+
+To make EC2 more fault-tolerant, Amazon engineered Availability Zones that are designed to be insulated from failures in other availability zones.
+Availability zones do not share the same infrastructure. Applications running in more than one availability zone can achieve higher availability.
+EC2 provides users with control over the geographical location of instances that allows for latency optimization and high levels of redundancy. For example, to minimize downtime, a user can set up server instances in multiple zones that are insulated from each other for most causes of failure such that one backs up the other.
+
+-------------------------------------------------------
+Amazon Simple Storage Service(Amazon S3)
+Amazon S3 is a service that provides object storage through a web service interface. Amazon S3 uses the same scalable storage infrastructure that Amazon.com uses to run its global e-commerce network.
+S3 can be employed to store any type of object which allows for uses like storage for Internet applications, backup and recovery, disaster recovery, data archives, data lakes for analytics, and hybrid cloud storage. In its service-level agreement, Amazon S3 guarantees 99.9% uptime, which works out to less than 43 minutes of downtime per month.
+
+The basic storage units of Amazon S3 are objects which are organized into buckets. Each object is identified by a unique, user-assigned key. Buckets can be managed using either the console provided by Amazon S3, programmatically using the AWS SDK, or with the Amazon S3 REST application programming interface (API).
+Objects can be managed using the AWS SDK or with the Amazon S3 REST API and can be up to five terabytes in size with two kilobytes of metadata. Additionally, objects can be downloaded using the HTTP GET interface and the BitTorrent protocol.
+
+Requests are authorized using an access control list associated with each object bucket and support versioning which is disabled by default. Note that since buckets are typically the size of an entire file system mount in other systems, this access control scheme is very coarse-grained, i.e. you cannot have unique access controls associated with individual files. Bucket names and keys are chosen so that objects are addressable using HTTP URLs.
+
+Amazon S3 can be used to replace significant existing (static) web-hosting infrastructure with HTTP client accessible objects. The Amazon AWS authentication mechanism allows the bucket owner to create an authenticated URL which is valid for a specified amount of time.
+
+Every item in a bucket can also be served as a BitTorrent feed. The Amazon S3 store can act as a seed host for a torrent and any BitTorrent client can retrieve the file. This can drastically reduce the bandwidth cost for the download of popular objects.
+
+A bucket can be configured to save HTTP log information to a sibling bucket; this can be used in data mining operations.
+Amazon S3 allows users to enable or disable logging. If enabled, the logs are stored in Amazon S3 buckets which can then be analyzed.
+These logs contain useful information such as:
+ Date and time of access to requested content
+    Protocol used (HTTP, FTP, etc.)
+    HTTP status codes
+    Turnaround time
+    HTTP request message
+
+Amazon S3 provides the option to host static HTML websites with index document support and error document support. For example, suppose that Amazon S3 is configured with CNAME records to host http://subdomain.example.com/. In the past, a visitor to this URL would find only an XML-formatted list of objects instead of a general landing page (e.g., index.html) to accommodate casual visitors. However, websites now hosted on S3 may designate a default page to display and another page to display in the event of a partially invalid URL, such as a 404 error.
+
+Amazon S3 provides an API for developers. The AWS console provides tools for managing and uploading files but it is not capable of managing large buckets or editing files. Third-party websites like S3edit.com or software like Cloudberry Explorer, ForkLift and WebDrive have the capability to edit files on Amazon S3.
+
+Amazon S3 offers four different storage classes that offer different levels of durability, availability, and performance requirements:
+    Amazon S3 Standard is the default class.
+    Amazon S3 Standard Infrequent Access (IA) is designed for less frequently accessed data. Typical use cases are backup and disaster recovery solutions.
+    Amazon S3 One Zone-Infrequent Access is designed for data that is not often needed but when required, needs to be accessed rapidly. 
+    Data is stored in one zone  and if that zone is destroyed, all data is lost.
+    Amazon Glacier is designed for long-term storage of data that is infrequently accessed and where retrieval latency of minutes or hours is acceptable.
+
+---------------------------------------------------------------
+Amazon Relational Database Service (or Amazon RDS):
+Amazon RDS is a distributed relational database service by Amazon Web Services (AWS). It is a web service running "in the cloud" designed to simplify the setup, operation, and scaling of a relational database for use in applications. Administration processes like patching the database software, backing up databases and enabling point-in-time recovery are managed automatically. Scaling storage and compute resources can be performed by a single API call as AWS does not offer an ssh connection to RDS instances.
+
+Amazon RDS Multi-Availability Zone (AZ) allows users to automatically provision and maintain a synchronous physical or logical “standby” replica, depending on database engine, in a different Availability Zone (independent infrastructure in a physically separate location).
+Multi-AZ database instance can be developed at creation time or modified to run as a Multi-AZ deployment later. Multi-AZ deployments aim to provide enhanced availability and data durability for MySQL, MariaDB, Oracle, PostgreSQL and SQL Server instances and are targeted for production environments In the event of planned database maintenance or unplanned service disruption, Amazon RDS automatically fails over to the up-to-date standby, allowing database operations to resume without administrative intervention. 
+
+Read replicas allow different uses case such as to scale in for read-heavy database workloads. Available are up to five replicas for MySQL, MariaDB, and PostgreSQL instances use the native, asynchronous replication functionality of their respective database engines, have no backups configured by default and are accessible and can be used for read scaling. Replicas are done at database server level and do not support replication at database instance or table level.
+
+Amazon RDS creates and saves automated backups of RDS DB instances. The first snapshot of a DB instance contains the data for the full DB instance and subsequent snapshots are incremental, maximum retention period is 35 days. In Multi-AZ RDS deployments backups are done in the standby instance so I/O activity is not suspended for any amount of time but you may experience elevated latencies for a few minutes during backups.
+---------------------------------------------------------------------------
+Practice:
+To work with AWS you can use GUI(not very good but easiest), AWS API(command line tool), you could also use Terraform to manage infrastructure resources.
+
+AWS Security Group (network firewall rules) - set of firewall rules that control traffic for your instance.
+
+Custom AMI from an EC2 instance - use snapshot of your established instance as image for your new instances.
+
+Auto scaling - maintain the right amount of instances for you application. You can scale base on many factors(CPU usage, memory usage, etc ...), you can scale up, you can scale down.
+
+AWS Elastic Load Balancer - balances load across your web application.
+Application load balancer - makes routing decision at the application layer, supports path-based routing, and can route requests to one or more ports on each EC2 instance or container in your VPC. Load Balancer whould also balance instances between all added Availability Zones.
+
+

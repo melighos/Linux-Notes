@@ -46,9 +46,28 @@ iface eth1 inet static
   post-up ip rule add from 172.16.100.10/32 table mgmt
   post-up ip rule add to 172.16.100.10/32 table mgmt
 
+----------------------------------------------------------------------------
 Ubuntu18.04:
+To go back to /network/interfaces file use "install ifupdown", and disable systemd-networkd.socket, instead enable "networking" service.
 
+/etc/netplan/01-netcfg.yaml or 50-cloud-init.yaml:
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      dhcp4: true
+      dhcp6: true
+    enp0s8:
+      dhcp4: false
+      dhcp6: false
+      addresses: [192.168.56.110/24, “2001:1::1/64”]
+      gateway4:  192.168.56.1
+      nameservers:
+              addresses: [8.8.8.8, 8.8.4.4]
 
+Use "netplan apply" command to apply recent changes.
+-------------------------------------------------------------------------------
 RHEL/CentOS:
 /etc/sysconfig/network:
 NETWORKING=yes
