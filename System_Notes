@@ -93,9 +93,11 @@ Getppid(): it is used to check the parent process ID
 Nice(): it is used to bias the currently running process property
 -----------------------------------------------------------------------------------
 GRUB(GRand Unified Bootloader) is a multi-boot loader.
+/boot/grub/grub.cfg
 /etc/default/grub
 update-grub (update-grub is a stub for running 'grub-mkconfig -o /boot/grub/grub.cfg "$@"' to generate a grub2 config file), alternatively:
 grub2-mkconfig -o "$(readlink -e /etc/grub2.conf)"  (can be /etc/grub2.cfg, or /etc/grub2-efi.cfg)
+
 Single-user mode: 
 'Shift' or 'Esc' key while rebooting to bring up GRUB menu
 Select the GRUB boot menu entry you wish to use, then press 'e' to edit the GRUB boot commands for the selected boot menu entry
@@ -245,6 +247,9 @@ This means that old connections may suddenly disconnect if too many connections 
 sysctl -w net.netfilter.nf_conntrack_max=65535 (change max number of possible connection tracking)
 /proc/sys/net/netfilter/nf_conntrack_max (maximum number of possible connection tracking)
 /proc/sys/net/netfilter/nf_conntrack_count (current count of connection tracking)
+
+DHCP - Dynamic Host Configuration Protocol
+/etc/dhcp/dhcpd.conf (dhcp server config)
 
 DNS - Domain Name System
 /etc/hosts (known hosts)

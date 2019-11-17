@@ -43,6 +43,7 @@ fdisk -l (hdd partitions)
 df -H/T (filesystems, free space and volumes,-i for inodes info)
 mount (mounted file systems)
 findmnt (list all mounted file systems)
+cat /etc/mtab (list existing mountpoints with their parameters)
 
 Network:
 cat /etc/services (network services names to port numbers)
@@ -181,7 +182,7 @@ ls -R, ls -mR *
 stat 'filename' (file metadata info(time-stamps, ownership, permissions, size and inode number))
 file 'filename' (file type details)
 touch (option) filename (change file mod/acs time, create file if not exist)
-ln -s /path/to/file /path/to/source
+ln -sfn /path/to/file /path/to/source (create symbolic link, -f removes the target destination before creating the symbolic link)
 sed -i -e 's/old/new/g' file (g=global,whole line.s=substitute command.i=in-place.e=expression/command)(text line editor)
 find (search utility)
 locate -r /filename$ (search utility, used existing pre-build database index file, updated by "updatedb" command)
@@ -193,7 +194,7 @@ scp (-vp) user@host:/file/to/copy /where/to/put - download from a server
 dpkg --list | grep linux-image (available kernels)
 strings 'file' (printable strings in binary files)
 tree 'folder' (tree view of folder content)
-mkdir -p folder/{sub1,sub2}/{sub1,sub2,sub3} or {1..100}/{1..100} (create folder with subfolders)
+mkdir -p folder/{sub1,sub2}/{sub1,sub2,sub3} or {1..100}/{1..100} (create folder with subfolders, -p will also make sure it won’t error if the directory exists)
 mktemp /tmp/temp-file.XXXXXXXX (randomizes the name)
 head (show first 10 lines of a file(default))
 tail (show last 10 lines of a file(default))
@@ -271,6 +272,7 @@ bash --login -x (show you every command, and its arguments, which is executed wh
 gdb (The GNU Debugger)
 strace (trace system calls and signals)
 ltrace   (trace system calls and signals)
+ltrace -S (shows both system calls and library calls)
 coredumpctl (core dump journal)
 coredumpctl list (core dump journals list)
 coredumpctl gdb match, bt (examine the backtrace)

@@ -76,11 +76,10 @@ fold -w 32 (wrap each input line to fit in specified width)
 export LD_LIBRARY_PATH="/list/of/library/paths:/another/path" ./program (colon-separated set of directories where libraries should be searched for first)
 
 stap -e 'probe syscall.mkdir { printf("%s[%d] -> %s(%s)\n", execname(), pid(), name, argstr) }' (trace a system call)
-ltrace -S (shows both system calls and library calls)
 
-readlink /proc/*/task/*/ns/* | sort -u (list of currently presented namespaces in the system)
-unshare -u /bin/bash (create a shell in new UTS namespace)
 nsenter --target $(docker inspect --format {{.State.Pid}} <container_name_or_ID>) --mount --uts --ipc --net --pid (enter the docker container(not recommended))
+
+blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed with formatting a volume only when blkid fails)
 ---------------------------------------------------------------------------------------------
 netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
 
@@ -132,6 +131,10 @@ kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
 ------------------------------------------------------------------------------------------
 mount:
 mount /dev/device /mountpoint (mount device)
+mount -vf /dev/device /mountpoint (- v - verbose, -f - fake, causes  everything  to  be  done  except  for  the  actual  system call)
+mount -o discard,defaults,noatime "$VOLUME_NAME" "$DATA_DIR" (-o - options)
+# defaults - use the default mount options, noatime - do not update inode access times, 
+# discard - discard function issues frequent commands to let the block device reclaim space freed by the filesystem.
 mount -o remount,rw / (remount root partition as writable)
 mount -o bind /some/where /else/where (bind mount, mounting one path into another path)
 mount --bind olddir newdir (same sf above)
@@ -174,6 +177,9 @@ apt install --install-recommends "package" (install recommended packages additio
 apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
+
+apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic
+apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic
 -------------------------------------------------------------------------------------------
 dpkg:
 dpkg -i packagename (install package)
@@ -514,6 +520,10 @@ echo 104857600 > memory.limit_in_bytes
 cgcreate -g cpu:/cpulimited
 cgset -r cpu.shares=512 cpulimited
 cgexec -g cpu:cpulimited COMMAND
+
+namespaces:
+readlink /proc/*/task/*/ns/* | sort -u (list of currently presented namespaces in the system)
+unshare -u /bin/bash (create a shell in new UTS namespace)
 ----------------------------------------------------------------------------------------
 rsync:
 rsync -a --delete --quiet /folder/to/backup /location/of/backup (-a - archived and syncs recursively)
