@@ -486,6 +486,8 @@ git config --global user.name "Your Name" (set up your name)
 git config --global user.email "your_email@whatever.com" (set up your e-mail)
 git config --global diff.tool "Program Name" (set up your diff tool(git difftool))
 git config --global merge.tool "Program Name" (set up your merge tool(git mergetool))
+
+git remote set-url origin git@github.com:username/repository.git (change git to use key authentication)
 ----------------------------------------------------------------------------------------
 udev:
 udevadm info -a -n /dev/sda (List the attributes of a device)
