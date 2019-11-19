@@ -97,6 +97,20 @@ ip route flush cache (flush route cache to get the new routing rules to be used)
 # check the private key and the certificate match
 (openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
 -----------------------------------------------------------------------------------------
+zip:
+zip -r music /home/yourname/music/ (create archive)
+# to add new files to an existing archive or update the files in an archive, use the same name for the archive file when running the zip command
+zip myfilename.zip -r /home/wikileaks -e (encrypt archive)
+zip zipfilename -d [name of file in archive] (delete files from a zipped archive)
+unzip -l test.zip (show zip archive content)
+unzip test.zip (decompress archive)
+
+tar:
+tar -zcvf archive.tar.gz path/to/folder (create archive + compress(z - gzip, c - create archive, v - verbose, f - give specific name))
+tar -zxvf archive.tar.gz (decompress archive(x - extract))
+tar tvf archive.tar (view an existing tar archive)
+tar xf archive.tgz filename (extract specific file)
+-------------------------------------------------------------------------------------
 usermod:
 usermod -a -G groupname username (add a user in a new group, -a - append)
 usermod -G GROUP1[,GROUP2,...[,GROUPN]]] username (define the groups for specific user)
