@@ -1,0 +1,14 @@
+Preboot eXecution Environment (PXE) - describes a standardized client-server environment that boots a software assembly, retrieved from a network, on PXE-enabled clients. On the client side it requires only a PXE-capable network interface controller (NIC), and uses a small set of industry-standard network protocols such as DHCP and TFTP. 
+PXE_Client --> Switch --> PXE_Server
+
+When using PXE the boot process is changed from the normal order to:
+Power on –> BIOS –> Network Card’s PXE stack –> Network Boot Program (NBP) downloaded using TFTP from server to Client’s RAM –> NBP’s responsibility to perform the next step (a.k.a. 2nd stage boot).
+
+DHCP is used to provide the appropriate client network parameters and specifically the location (IP address) of the TFTP server hosting, ready for download, the initial bootstrap program (NBP) and complementary files. To initiate a PXE bootstrap session the DHCP component of the client's PXE firmware broadcasts a DHCPDISCOVER packet containing PXE-specific options to port 67/UDP (DHCP server port); it asks for the required network configuration and network booting parameters. The PXE-specific options identify the initiated DHCP transaction as a PXE transaction. Standard DHCP servers (non PXE enabled) will be able to answer with a regular DHCPOFFER carrying networking information (i.e. IP address) but not the PXE specific parameters. A PXE client will not be able to boot if it only receives an answer from a non PXE enabled DHCP server.
+
+After parsing a PXE enabled DHCP server DHCPOFFER, the client will be able to set its own network IP address, IP Mask, etc., and to point to the network located booting resources, based on the received TFTP Server IP address and the name of the NBP. The client next transfers the NBP into its own random-access memory (RAM) using TFTP, possibly verifies it (i.e. UEFI Secure Boot), and finally boots from it. NBPs are just the first link in the boot chain process and they generally request via TFTP a small set of complementary files in order to get running a minimalistic OS executive (i.e. WindowsPE, or a basic Linux kernel+initrd). The small OS executive loads its own network drivers and TCP/IP stack. At this point, the remaining instructions required to boot or install a full OS are provided not over TFTP, but using a robust transfer protocol (such as HTTP, CIFS, or NFS).
+
+It is absolutely demanding that one of your network card interface, in case your server poses more NICs, must be configured with a static IP address from the same IP range that belongs to the network segment that will provide PXE services.
+
+Unattended installation config:
+

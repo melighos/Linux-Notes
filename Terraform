@@ -18,14 +18,18 @@ terraform plan -out=planfile ("planfile" - zip archive that have inside tf-files
 ----------------------------------------------------------------------
 Configuration files describe to Terraform the components needed to run a single application or your entire datacenter. Terraform generates an execution plan describing what it will do to reach the desired state, and then executes it to build the described infrastructure. As the configuration changes, Terraform is able to determine what changed and create incremental execution plans which can be applied.
 
-Terraform Block Syntax:
-Terraform-specific settings are gathered together into terraform blocks:
+A group of resources can be gathered into a module, which creates a larger unit of configuration. A resource describes a single infrastructure object, while a module might describe a set of objects and the necessary relationships between them in order to create a higher-level system.
+A Terraform configuration consists of a root module, where evaluation begins, along with a tree of child modules created when one module calls another.
 
-terraform {
-  # ...
+example.tf:
+
+provider "aws" {
+  profile    = "default"
+  region     = "us-east-1"
 }
 
-
-# set up terraform and terraform providers version in terraform-block:
-terraform {
+resource "aws_instance" "example" {
+  ami           = "ami-2757f631"
+  instance_type = "t2.micro"
+}
     

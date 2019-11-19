@@ -80,5 +80,7 @@ Auto scaling - maintain the right amount of instances for you application. You c
 
 AWS Elastic Load Balancer - balances load across your web application.
 Application load balancer - makes routing decision at the application layer, supports path-based routing, and can route requests to one or more ports on each EC2 instance or container in your VPC. Load Balancer whould also balance instances between all added Availability Zones.
-
-
+------------------------------------------------------------------------
+AWSCLI:
+pip3 install awscli --upgrade --user (installing awscli using python pip)
+aws configure
