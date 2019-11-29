@@ -80,10 +80,16 @@ stap -e 'probe syscall.mkdir { printf("%s[%d] -> %s(%s)\n", execname(), pid(), n
 nsenter --target $(docker inspect --format {{.State.Pid}} <container_name_or_ID>) --mount --uts --ipc --net --pid (enter the docker container(not recommended))
 
 blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed with formatting a volume only when blkid fails)
+
+mkpasswd -m sha-512 (create hashed password)
+---------------------------------------------------------------------------------------
+sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
+sudo resize2fs /dev/sda2 (resize partition)
 ---------------------------------------------------------------------------------------------
 netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
 
 wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+wget -r -np -R "index.html*" http://example.com/configs/.vim/ (-np/--no-parent - download only needed folder, -r/--recursive, -R/--reject)
 
 mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
 
@@ -549,9 +555,9 @@ rsync -a --delete --quiet -e ssh /folder/to/backup user@host:/location/of/backup
 
 rsync -r --progress source destination (transferring and synchronizing local files, -r -recursive)
 rsync -av --progress --delete source destination (sync the contents of source to destination on the same system)
-rsync -ve ssh source user@host:destination - transferring and synchronizing remote files(-u - ignore same files)
-rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file - download from a server
-rsync -avH /home/user/path/to/file -e ssh user@server:/path/to/file - upload to a server
+rsync -ve ssh source user@host:destination (transferring and synchronizing remote files, -u - ignore same files)
+rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file (download from a server)
+rsync -avH --progress /home/user/path/to/file -e ssh user@server:/path/to/file (upload to a server)
 rsync -a --include '*/' --include '*.txt' --exclude '*' source/ target/  (Copy specific file type keeping the folder structure)
 -----------------------------------------------------------------------------------------
 gdb:

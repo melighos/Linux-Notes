@@ -8,7 +8,188 @@ DHCP is used to provide the appropriate client network parameters and specifical
 
 After parsing a PXE enabled DHCP server DHCPOFFER, the client will be able to set its own network IP address, IP Mask, etc., and to point to the network located booting resources, based on the received TFTP Server IP address and the name of the NBP. The client next transfers the NBP into its own random-access memory (RAM) using TFTP, possibly verifies it (i.e. UEFI Secure Boot), and finally boots from it. NBPs are just the first link in the boot chain process and they generally request via TFTP a small set of complementary files in order to get running a minimalistic OS executive (i.e. WindowsPE, or a basic Linux kernel+initrd). The small OS executive loads its own network drivers and TCP/IP stack. At this point, the remaining instructions required to boot or install a full OS are provided not over TFTP, but using a robust transfer protocol (such as HTTP, CIFS, or NFS).
 
-It is absolutely demanding that one of your network card interface, in case your server poses more NICs, must be configured with a static IP address from the same IP range that belongs to the network segment that will provide PXE services.
+=============================================================================
+Unattended Ubuntu installation:
+It is important to know which boot mechanism is being used. A PXE server configured to work only with BIOS won’t work with UEFI, and the other way round. A netboot image is commonly prepared having one or another of these two mechanisms in mind. We will use PXE server configurated to be used with BIOS.
 
-Unattended installation config:
+In order to setup a PXE server, the following steps should be taken:
+1.We need DHCP server to point to our PXE server: 'dhcpd' or 'dnsmasq' services or router configured to reroute hosts to PXE server and point them to 'filename "pxelinux.0"'
+Examples:
+-----------------------------
+dhcpd.conf:
+subnet 192.168.11.0 netmask 255.255.255.0 {
+  option domain-name "hiroom2.com";
+  option domain-name-servers 192.168.11.2, 192.168.11.1;
+  option routers 192.168.11.1;
+  filename "pxelinux.0";
+}
+
+host debian-8-pxeboot {
+  hardware ethernet 08:00:27:6c:29:8b;
+  fixed-address 192.168.11.129;
+}
+
+host ubuntu-16.04-pxeboot {
+  hardware ethernet 52:54:00:01:14:cb;
+  fixed-address 192.168.11.128;
+}
+----------------------------------------------
+create the file dnsmasq.d/proxydhcp.conf:
+# Set the boot filename for netboot/PXE. You will only need
+# this is you want to boot machines over the network and you will need
+# a TFTP server; either dnsmasq's built in TFTP server or an
+# external one. (See below for how to enable the TFTP server.)
+dhcp-boot=pxelinux.0
+ 
+# Loads pxelinux.0 from dnsmasq TFTP server.
+pxe-service=x86PC, "Install Linux", pxelinux
+ 
+# Set the root directory for files available via FTP.
+tftp-root=/tmp/netboot
+ 
+# Log lots of extra information about DHCP transactions.
+log-dhcp
+ 
+# This range(s) is for the public interface, where dnsmasq functions
+# as a proxy DHCP server providing boot information but no IP leases.
+# Any ip in the subnet will do, so you may just put your server NIC ip here.
+dhcp-range=REPLACE_THIS_WITH_THE_IP_ADDRESS_OF_INTERFACE_USED_IN_THE_BRIDGE,proxy
+------------------------------------------------------------------------
+2.Install tftpd:
+sudo apt install -y tftpd-hpa
+sudo systemctl enable tftpd-hpa
+sudo systemctl start tftpd-hpa
+# create root directory for tftpd service
+sudo mkdir -p /var/lib/tftpboot
+------------------------------------------------
+3.Download the Ubuntu Netboot Image
+Netboot image is a bootable image optimised to perform an installation via network (as opposed to an ISO image). It generally contains:
+small network boot manager program like pxelinux.0 (or NBP), which is used to deploy the installation menu and load a full installation image;
+and a second-stage bootable full image (typically initrd), used to perform the installation.
+
+wget http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/netboot.tar.gz -O netboot.tar.gz
+# unpack netboot image to tftpd root directory
+tar xf netboot.tar.gz -C /var/lib/tftpboot
+
+--------------------------------------------------------------
+4.Preseed the Installation
+Preseeding is a method for automating the installation of the Debian operating system and its derivatives. Answers to installation questions, which would normally be answered interactively by an operator, are predetermined and supplied via a configuration file.
+
+pressed.cfg:
+### locale and keyboard
+d-i debian-installer/locale string en_US.UTF-8
+
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layout select us
+d-i console-setup/variant select us
+d-i kbd-chooser/method select American English
+
+### network
+d-i netcfg/get_hostname string wemineos-worker
+d-i netcfg/get_domain string wemineos
+d-i netcfg/choose_interface select auto
+
+### mirrors
+d-i mirror/http/proxy string 
+d-i mirror/http/mirror select ua.archive.ubuntu.com
+d-i mirror/suite string bionic
+
+d-i apt-setup/restricted boolean true
+d-i apt-setup/universe boolean true
+
+### accounts
+d-i passwd/root-login boolean true
+d-i passwd/root-password-crypted password $6$klVq6MzdTf677rp$Cz/TV.acUuJy00PhgPFM8N/oapxeuG1pEpJuWCxoQlO2Uvo6S6xV0WMaNOZaa/qE0X1VXNScu/lwx6v5v1X7M0
+d-i passwd/make-user boolean true
+d-i passwd/user-fullname string wemineos-user
+d-i passwd/username string wemineos
+d-i passwd/user-password-crypted password $6$klVq6MzdTf677rp$Cz/TV.acUuJy00PhgPFM8N/oapxeuG1pEpJuWCxoQlO2Uvo6S6xV0WMaNOZaa/qE0X1VXNScu/lwx6v5v1X7M0
+
+### time
+d-i time/zone string US/Eastern
+d-i clock-setup/utc-auto boolean true
+d-i clock-setup/utc boolean true
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string ntp.ubuntu.com
+
+### disk partitioning
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+d-i partman/default_filesystem string ext4
+
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
+d-i partman-md/device_remove_md boolean true
+d-i partman-md/confirm boolean true
+d-i partman-md/confirm_nooverwrite boolean true
+
+### grub
+d-i grub-installer/grub2_instead_of_grub_legacy boolean true
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/bootdev string default
+
+# Individual additional packages to install
+d-i pkgsel/include string openssh-server \
+ coreutils \
+ wget \
+ curl \
+ unzip \
+ software-properties-common \
+ git \
+ net-tools
+
+### post install
+d-i preseed/late_command string \
+  in-target curl -X GET -o /root/firstStartWorker.sh https://www.googleapis.com/storage/v1/b/wemineos-scripts/o/firstStartWorker.sh?alt=media; \
+  in-target chmod +x /root/firstStartWorker.sh; \
+  in-target /root/firstStartWorker.sh; 
+
+# Avoid that last message about the install being complete.
+d-i finish-install/reboot_in_progress note
+----------------------------------------------------------------------------------------
+5.pxelinux configuration.
+will use pxelinux contained in netboot image instead of installing pxelinux package with apt.
+${tftpboot_dir} has files as below:
+
+pxelinux.0 	boot file image
+ldlinux.c32 	library used by pxelinux.0
+pxelinux.cfg/default 	symbolic link to syslinux.cfg
+boot-screens/syslinux.cfg 	pxelinux.0 configuration file
+boot-screens/menu.cfg 	boot menu
+boot-screens/vesamenu.c32 	VESA program
+boot-screens/libcom32.c32 	library used by vesamenu.c32
+boot-screens/libutil.c32 	library used by vesamenu.c32
+ubuntu-installer 	Ubuntu installer 
+----------------------------------------------------------------
+# Config to automatically install ubuntu on connected machine
+pxelinux.cfg/default:
+# D-I config version 2.0
+# search path for the c32 support libraries (libcom32, libutil etc.)
+default install
+label install
+kernel ubuntu-installer/amd64/linux
+append vga=788 initrd=ubuntu-installer/amd64/initrd.gz auto=true priority=critical preseed/url=tftp://REPLACE_THIS_WITH_THE_IP_ADDRESS_OR_DOMAIN_NAME/preseed.cfg
+
+# Or to boot fro local drive
+pxelinux.cfg/installed:
+default vesamenu.c32
+prompt 0
+
+MENU TITLE Sample Menu
+MENU AUTOBOOT Starting MineOS in # seconds
+timeout 50
+
+label disk0
+  localboot 0
+  MENU LABEL Boot disk (0x80)
+------------------------------------------
+
 

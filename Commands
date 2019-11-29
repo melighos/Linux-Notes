@@ -171,7 +171,7 @@ killall -u user_name (kill all processes by that user)
 kill SIGNAL PID (send signal to PID, SIGTERM by default, kill -l to list available signals)
 trap '' SIGNAL(s) (trap signal, specifies the signals is to be ignored)
 trap SIGNAL(s) (trap signal, change signals action back to default)
-nohup <long-running-process> & (nohup make your process ignore the hangup signal)
+nohup <long-running-process> & (detach process from command line session ,nohup make your process ignore the hangup signal)
 
 Files and Directories:
 ls -l (list files and folders)(ls -lc(change time),ls -lu(modification time))
