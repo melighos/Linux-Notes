@@ -8,6 +8,12 @@ Operators and Infrastructure teams can use Terraform to manage environments with
 Terraform creates a state file when a project is first initialized. Terraform uses this local state to create plans and make changes to your infrastructure. Prior to any operation, Terraform does a refresh to update the state with the real infrastructure. This means that Terraform state is the source of truth by which configuration changes are measured. If a change is made or a resource is appended to a configuration, Terraform compares those changes with the state file to determine what changes result in a new resource or resource modifications.
 It has a "planning" step where it generates an execution plan. The execution plan shows what Terraform will do when you call apply. This lets you avoid any surprises when Terraform manipulates infrastructure.
 
+Configuration files describe to Terraform the components needed to run a single application or your entire datacenter. Terraform generates an execution plan describing what it will do to reach the desired state, and then executes it to build the described infrastructure. As the configuration changes, Terraform is able to determine what changed and create incremental execution plans which can be applied.
+
+A group of resources can be gathered into a module, which creates a larger unit of configuration. A resource describes a single infrastructure object, while a module might describe a set of objects and the necessary relationships between them in order to create a higher-level system.
+A Terraform configuration consists of a root module, where evaluation begins, along with a tree of child modules created when one module calls another.
+
+--------------------------------------------------------------
 commands:
 terraform (By executing 'terraform' you should see standard help output)
 terraform --help <command> (get more informatin about this command)
@@ -15,13 +21,59 @@ terraform init (Initialize the project directory with the configuration files. T
 terraform plan [options] [DIR] (Generates an execution plan for Terraform)
 terraform plan -out=planfile ("planfile" - zip archive that have inside tf-files, plan files and current tfstate)
 
-----------------------------------------------------------------------
-Configuration files describe to Terraform the components needed to run a single application or your entire datacenter. Terraform generates an execution plan describing what it will do to reach the desired state, and then executes it to build the described infrastructure. As the configuration changes, Terraform is able to determine what changed and create incremental execution plans which can be applied.
 
-A group of resources can be gathered into a module, which creates a larger unit of configuration. A resource describes a single infrastructure object, while a module might describe a set of objects and the necessary relationships between them in order to create a higher-level system.
-A Terraform configuration consists of a root module, where evaluation begins, along with a tree of child modules created when one module calls another.
+===================================================================================================
+AWS:
 
-example.tf:
+AWS provider is used to interact with the many resources supported by AWS. The provider needs to be configured with the proper credentials before it can be used.
+
+# Configure the AWS Provider
+provider "aws" {
+  version = "~> 2.0"
+  region  = "us-east-1"
+}
+
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+The AWS provider offers a flexible means of providing credentials for authentication. The following methods are supported, in this order, and explained below:
+Static credentials
+Environment variables
+Shared credentials file
+EC2 Role
+
+Static credentials can be provided by adding an access_key and secret_key in-line in the AWS provider block:
+
+provider "aws" {
+  region     = "us-west-2"
+  access_key = "my-access-key"
+  secret_key = "my-secret-key"
+}
+
+You can provide your credentials via the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, environment variables, representing your AWS Access Key and AWS Secret Key, respectively. Note that setting your AWS credentials using either these (or legacy) environment variables will override the use of AWS_SHARED_CREDENTIALS_FILE and AWS_PROFILE. The AWS_DEFAULT_REGION and AWS_SESSION_TOKEN environment variables are also used, if applicable:
+
+provider "aws" {}
+
+$ export AWS_ACCESS_KEY_ID="anaccesskey"
+$ export AWS_SECRET_ACCESS_KEY="asecretkey"
+$ export AWS_DEFAULT_REGION="us-west-2"
+$ terraform plan
+
+You can use an AWS credentials file to specify your credentials. The default location is $HOME/.aws/credentials on Linux and OS X. If we fail to detect credentials inline, or in the environment, Terraform will check this location. You can optionally specify a different location in the configuration by providing the shared_credentials_file attribute, or in the environment with the AWS_SHARED_CREDENTIALS_FILE variable. This method also supports a profile configuration and matching AWS_PROFILE environment variable:
+
+provider "aws" {
+  region                  = "us-west-2"
+  shared_credentials_file = "/Users/tf_user/.aws/creds"
+  profile                 = "customprofile"
+}
+
+If you're running Terraform on ECS or CodeBuild and you have configured an IAM Task Role, Terraform will use the container's Task Role. Terraform looks for the presence of the AWS_CONTAINER_CREDENTIALS_RELATIVE_URI environment variable that AWS injects when a Task Role is configured. If you have not defined a Task Role for your container or CodeBuild job, Terraform will continue to use the EC2 Role.
+
+
+-------------------------------------------------
+Usage:
 
 provider "aws" {
   profile    = "default"
