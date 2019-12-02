@@ -37,7 +37,8 @@ provider "aws" {
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
-
+-------------------------
+Authentication:
 The AWS provider offers a flexible means of providing credentials for authentication. The following methods are supported, in this order, and explained below:
 Static credentials
 Environment variables
@@ -45,43 +46,105 @@ Shared credentials file
 EC2 Role
 
 Static credentials can be provided by adding an access_key and secret_key in-line in the AWS provider block:
-
+######
 provider "aws" {
   region     = "us-west-2"
   access_key = "my-access-key"
   secret_key = "my-secret-key"
 }
-
+######
 You can provide your credentials via the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, environment variables, representing your AWS Access Key and AWS Secret Key, respectively. Note that setting your AWS credentials using either these (or legacy) environment variables will override the use of AWS_SHARED_CREDENTIALS_FILE and AWS_PROFILE. The AWS_DEFAULT_REGION and AWS_SESSION_TOKEN environment variables are also used, if applicable:
-
+######
 provider "aws" {}
 
 $ export AWS_ACCESS_KEY_ID="anaccesskey"
 $ export AWS_SECRET_ACCESS_KEY="asecretkey"
 $ export AWS_DEFAULT_REGION="us-west-2"
 $ terraform plan
-
+#####
 You can use an AWS credentials file to specify your credentials. The default location is $HOME/.aws/credentials on Linux and OS X. If we fail to detect credentials inline, or in the environment, Terraform will check this location. You can optionally specify a different location in the configuration by providing the shared_credentials_file attribute, or in the environment with the AWS_SHARED_CREDENTIALS_FILE variable. This method also supports a profile configuration and matching AWS_PROFILE environment variable:
-
+#####
 provider "aws" {
   region                  = "us-west-2"
   shared_credentials_file = "/Users/tf_user/.aws/creds"
   profile                 = "customprofile"
 }
-
+######
 If you're running Terraform on ECS or CodeBuild and you have configured an IAM Task Role, Terraform will use the container's Task Role. Terraform looks for the presence of the AWS_CONTAINER_CREDENTIALS_RELATIVE_URI environment variable that AWS injects when a Task Role is configured. If you have not defined a Task Role for your container or CodeBuild job, Terraform will continue to use the EC2 Role.
 
 
 -------------------------------------------------
-Usage:
+Usage Example:
 
+Configure the provider and the region:
+########
 provider "aws" {
-  profile    = "default"
-  region     = "us-east-1"
-}
 
-resource "aws_instance" "example" {
-  ami           = "ami-2757f631"
-  instance_type = "t2.micro"
+ region = "us-east-1"
+
 }
-    
+#######
+Each provider supports different kinds of resources such as load balancers, servers, databases, etc..
+######
+resource "aws_instance" "web" {
+
+  ami           = "ami-0b69ea66ff7391e80"
+
+  instance_type = "t2.nano"
+
+  vpc_security_group_ids = ["${aws_security_group.allow_http.id}"]
+
+}
+#######
+Then launch a 'terraform init' to initialized the Terraform working directory.  By that, I mean that it will download the AWS plugin.
+
+Before performing the actual change, you can use the 'terraform plan' to understand what change has been established.
+The plus sign means what is going to be added and the minus sign means those that are going to be removed.
+
+To create the instance use the 'terraform apply' to create the instance. It will prompt you to type ‘yes’ to continue on with the creation.
+
+There are more things that need to be added for example the name of the instance. Let’s called it Nginx-Server. Let’s add the tags. Also, launch a terraform apply.
+########
+tags = {
+
+    Name = "Nginx-Web"
+
+ }
+######
+To make the installation of Nginx add the following block of lines:
+#######
+user_data = <<-EOF
+
+  #!/bin/bash
+
+  yum install nginx -y
+
+  systemctl start nginx
+
+  systemctl enable nginx
+
+  EOF
+#######
+To add the security groups, enter these codes:
+#######
+resource "aws_security_group" "allow_http" {
+
+  name        = "allow_http"
+
+  description = "Allow HTTP inbound traffic"
+
+  ingress {
+
+    from_port   = 80
+
+    to_port     = 80
+
+    protocol    = "tcp"
+
+    cidr_blocks = ["0.0.0.0/0"]
+
+  }
+#######
+When launching terraform apply, you will notice that Terraform will destroy the old machine and build a new one which implies that there will be a downtime.
+
+
