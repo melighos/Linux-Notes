@@ -1,3 +1,9 @@
+
+
+
+
+
+-------------------------------------------------------------------
 Absolute minimum systemd service unit:
 /etc/systemd/system/servicename.service
 
@@ -9,4 +15,4 @@ ExecStart=/usr/local/bin/disk-space-check.sh    # ExecStart: This field provides
 
 [Install]
 WantedBy=default.target                         # WantedBy: Into what boot target the systemd unit should be installed
-
+------------------------------------------------------------------------------

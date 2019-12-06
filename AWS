@@ -69,9 +69,10 @@ Read replicas allow different uses case such as to scale in for read-heavy datab
 
 Amazon RDS creates and saves automated backups of RDS DB instances. The first snapshot of a DB instance contains the data for the full DB instance and subsequent snapshots are incremental, maximum retention period is 35 days. In Multi-AZ RDS deployments backups are done in the standby instance so I/O activity is not suspended for any amount of time but you may experience elevated latencies for a few minutes during backups.
 ---------------------------------------------------------------------------
-Practice:
-To work with AWS you can use GUI(not very good but easiest), AWS API(command line tool), you could also use Terraform to manage infrastructure resources.
+Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.
 
+You can easily customize the network configuration for your Amazon VPC. For example, you can create a public-facing subnet for your web servers that has access to the Internet, and place your backend systems such as databases or application servers in a private-facing subnet with no Internet access. You can leverage multiple layers of security, including security groups and network access control lists, to help control access to Amazon EC2 instances in each subnet.
+--------------------------------------------------------------------------------
 AWS Security Group (network firewall rules) - set of firewall rules that control traffic for your instance.
 
 Custom AMI from an EC2 instance - use snapshot of your established instance as image for your new instances.
@@ -81,6 +82,12 @@ Auto scaling - maintain the right amount of instances for you application. You c
 AWS Elastic Load Balancer - balances load across your web application.
 Application load balancer - makes routing decision at the application layer, supports path-based routing, and can route requests to one or more ports on each EC2 instance or container in your VPC. Load Balancer whould also balance instances between all added Availability Zones.
 ------------------------------------------------------------------------
+To work with AWS you can use GUI(not very good but easiest), AWS API(command line tool), you could also use Terraform to manage infrastructure resources.
+
 AWSCLI:
 pip3 install awscli --upgrade --user (installing awscli using python pip)
 aws configure
+
+
+
+
