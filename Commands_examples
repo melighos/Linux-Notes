@@ -57,6 +57,7 @@ cut -d ':' -f1,2 filename (cut file or program output,-d - delimiter,-f - field(
 
 cp -v /path/{file1,file2} /where/to/copy (multiple files copy)
 cp -p file1 file2 (preserving the mode, ownership and timestamp)
+cp ./src/*/*.h ./aaa 2>/dev/null || : (fail resistant copy)
 
 git ls-files | sort -r | xargs rename 's/findme(?!.*\/)\/?$/replaceme/g' '{}' (Rename lookahead workaround for recursive copy)
 pax -rw -pe -s/2015/2016/ source/ target/  (utility to copy a directory tree or create or unpack an archive)
@@ -82,6 +83,10 @@ nsenter --target $(docker inspect --format {{.State.Pid}} <container_name_or_ID>
 blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed with formatting a volume only when blkid fails)
 
 mkpasswd -m sha-512 (create hashed password)
+
+$ logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
+
+$ logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -99,6 +104,9 @@ export http_proxy=http://user:password@your-proxy-ip-address:port/ (set proxy en
 ip route add 192.168.200.0/24 via 127.0.0.1 (block IPs by null-routing, won't protect against most UDP attacks, packets from the remoute do reach the system)
 ip route add blackhole 192.168.0.195/32 (same as above)
 ip route flush cache (flush route cache to get the new routing rules to be used)
+
+dhclient -v -r eth0 (releases the current dhcp lease)
+dhclient -v eth0 (request new IP address using dhcp)
 
 # check the private key and the certificate match
 (openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
@@ -246,7 +254,6 @@ rpm -ql <package> (list the contents of installed package)
 rpm -qlp filename.rpm (list the contents of specific .rpm package)
 repoquery -l filename.rpm (list the contents of specific .rpm package)
 --------------------------------------------------------------------------------------------------------------------
-find . -type f -name "*.txt" -exec sed -i'' -e 's/foo/bar/g' {} + (same but differently)
 find . -type f ! -name "avoid_this_directory_please" (find with avoid command)
 find . -printf "%M\t%u\t%g\t%p\n" (list of files, as ls command)
 find -name "*.txt" -not -path "*/folder1/*" -not -path "*/folder2/*" (exclude folders from search)
@@ -501,6 +508,9 @@ git checkout <hash> (checkout previous snapshot)
 git checkout -b "branch_name" (add new branch)
 git checkout "branch_name" (switch to another branch)
 git merge "branch_name" (merge current branch in to another branch)
+git tag (show tags)
+git tag 'tag-name' (tag current commit with new tag)
+git push origin <tag-name> (push commit with tag)
 
 git config --global user.name "Your Name" (set up your name)
 git config --global user.email "your_email@whatever.com" (set up your e-mail)
@@ -585,11 +595,11 @@ strace -p PID (Attach to the process ID)
 
 strace -e open appname (what this program tries to open)
 strace -e trace=read,write -p <PID> (print all read and write system calls by the process)
-strace -e trace=network (trace all the network related system calls)
-strace -e trace=signal (trace all signal related system calls)
-strace -e trace=ipc (trace all IPC related system calls)
-strace -e race=desc (trace all file descriptor related system calls)
-strace -e trace=memory (trace all memory mapping related system calls)
+strace -e trace=network -p <PID> (trace all the network related system calls)
+strace -e trace=signal -p <PID> (trace all signal related system calls)
+strace -e trace=ipc -p <PID> (trace all IPC related system calls)
+strace -e race=desc -p <PID> (trace all file descriptor related system calls)
+strace -e trace=memory -p <PID> (trace all memory mapping related system calls)
 --------------------------------------------------------------------------------
 LVM:
 lvextend -L +500M /dev/vgroup/lvolume (extending the size of LVM partition by 500MB)
