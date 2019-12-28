@@ -283,6 +283,12 @@ sed '/sh$/d' (deletes all the lines ending with sh −, $ - matches the end of l
 / */    (Matches one or more spaces)
 
 sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
+
+sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' file
+# ':a' - defines a label a
+# 's/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g' - looks for a duplicated word consisting of alphanumeric characters and removes the second occurrence
+# 'ta' If the last substitution command resulted in a change, jumps back to label 'a' to try again, the code keeps looking for duplicates until none remain
+# 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
