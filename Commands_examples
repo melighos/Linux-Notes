@@ -200,14 +200,15 @@ aptitude install pkg_name=version (install package of specific version, mainly f
 aptitude why packegename (Why it is installed)
 aptitude search '~i~Dpackegename' (What depends on this package)
 ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
+apt-get install -f (remove not properly installed pakages)
 
 apt install --install-recommends "package" (install recommended packages additionally to one in question)
 apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 
-apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic
-apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic
+apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (install kernel)
+apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (remove kernel)
 -------------------------------------------------------------------------------------------
 dpkg:
 dpkg -i packagename (install package)
