@@ -1,3 +1,15 @@
 Kubernetes - open-source container-orchestration system for automating application deployment, scaling, and management. It was originally designed by Google, and is now maintained by the Cloud Native Computing Foundation. It aims to provide a "platform for automating deployment, scaling, and operations of application containers across clusters of hosts". It works with a range of container tools, including Docker. Many cloud services offer a Kubernetes-based platform or infrastructure as a service (PaaS or IaaS) on which Kubernetes can be deployed as a platform-providing service.
 
+Commands examples:
+kubectl config view (show kubernates info about clasters)
+kubectl get pods -A (get all pods in current namespace)
+kubectl describe pod -n <namespace> <pod name> (get pod details)
+kubectl logs -n <namespace> <pod name> (get pod logs if eny present)
+kubectl exec -it -n <namespace> <pod name> bash (exec bash in pod)
+kubectl port-forward -n <namespace> <pod name> 5432:5432 (port forvard from system to pod)
+kubectl delete pods -n <namespace> <pod name> (delete and recreate pod)
+kubectl apply -f /path/to/.yaml (apply new yaml config)
+kubectl get configmap <some file> -o yaml > <configname>.yaml (create confignmap from file)
+kubectl delete -f qa-environment -R (recursively delete enviroment)
+kubectl apply -f qa-environment -R (recursively apply new eviroment using file in enviroment directory)
 
