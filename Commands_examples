@@ -200,14 +200,15 @@ aptitude install pkg_name=version (install package of specific version, mainly f
 aptitude why packegename (Why it is installed)
 aptitude search '~i~Dpackegename' (What depends on this package)
 ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
+apt-get install -f (remove not properly installed pakages)
 
 apt install --install-recommends "package" (install recommended packages additionally to one in question)
 apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 
-apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic
-apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic
+apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (install kernel)
+apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (remove kernel)
 -------------------------------------------------------------------------------------------
 dpkg:
 dpkg -i packagename (install package)
@@ -290,6 +291,12 @@ sed '/sh$/d' (deletes all the lines ending with sh −, $ - matches the end of l
 / */    (Matches one or more spaces)
 
 sed -e "$(sed 's:.*:s/&//ig:' wordfile)" textfile ('wordfile'is a file containing words to remove and 'textfile' containing your text)
+
+sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' file
+# ':a' - defines a label a
+# 's/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g' - looks for a duplicated word consisting of alphanumeric characters and removes the second occurrence
+# 'ta' If the last substitution command resulted in a change, jumps back to label 'a' to try again, the code keeps looking for duplicates until none remain
+# 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
