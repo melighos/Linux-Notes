@@ -586,8 +586,8 @@ gdb: quit (detach gdb)
 
 gdb -p PID --batch -ex 'call close(4)' (close the socket in one go without invoking the gdb shell)
 gdb -p PID --batch -ex 'call shutdown(4, 2)' (closes the connection while keeping the socket valid in one go without invoking the gdb shell)
-The close() function can be dangerous when used on multi-threaded applications. There is an easy solution for sockets: use shutdown() instead of close().
-The shutdown() function closes the connection, while keeping the socket valid. Also, it actually wakes up threads in a blocking operation in most implementations.
+#The close() function can be dangerous when used on multi-threaded applications. There is an easy solution for sockets: use shutdown() instead of close().
+#The shutdown() function closes the connection, while keeping the socket valid. Also, it actually wakes up threads in a blocking operation in most implementations.
 -----------------------------------------------------------------------------------------
 strace:
 strace appname (start an app with tracing system calls and signals)

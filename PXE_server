@@ -16,6 +16,10 @@ In order to setup a PXE server, the following steps should be taken:
 1.We need DHCP server to point to our PXE server: 'dhcpd' or 'dnsmasq' services or router configured to reroute hosts to PXE server and point them to 'filename "pxelinux.0"'
 Examples:
 -----------------------------
+router:
+next-server (IP; Default: ) # our pxe srver ip
+boot-file-name (string; Default: ) # boot file image name, pxelinux.0
+------------------------------------
 dhcpd.conf:
 subnet 192.168.11.0 netmask 255.255.255.0 {
   option domain-name "hiroom2.com";
