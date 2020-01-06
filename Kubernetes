@@ -12,7 +12,13 @@ kubectl [command] [TYPE] [NAME] [flags]
 
 kubectl config view (show kubernates info about clasters)
 kubectl cluster-info (Display endpoint information about the master and services in the cluster)
-kubectl get services (List all services in the namespace)
+kubectl get services -A (List all services in the namespace)
+kubectl describe service -n <namespace> <servicename> (service info)
+kubectl get service -n <namespace> <servicename> -o json/yaml (service info in json/yaml format)
+kubectl get ingress -A (show ingress)
+kubectl get endpoints -A (show endpoints)
+kubectl get nodes (list all nodes in claster)
+kubectl describe node <nodename> (node info)
 kubectl get pods -A (get all pods in current namespace)
 kubectl get pods -o wide -n <namespace> (List all pods in the namespace, with more details)
 kubectl create -f /path/to/.yaml (Create one or more resources from a file)
@@ -26,6 +32,9 @@ kubectl logs -n <namespace> <pod name> (get pod logs if eny present)
 kubectl exec -it -n <namespace> <pod name> bash (exec bash in pod)
 kubectl port-forward -n <namespace> <pod name> 5432:5432 (port forvard from system to pod)
 kubectl get configmap <some file> -o yaml > <configname>.yaml (create confignmap from file)
+
+# for each service, for each port, if nodePort is defined, print nodePort
+kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{.}}{{"\n"}}{{end}}{{end}}{{end}}'
 =============================================================================
 
 A Kubernetes cluster consists of two types of resources:
