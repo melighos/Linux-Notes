@@ -49,7 +49,7 @@ The primary goal is to kill the least number of processes that minimizes the dam
 If it's invoked it will write a great deal of information to the system log including which process was killed and why.
 /proc/<pid>/oom_score (oom_score of each of the processes)
 
-Inod - entry in inode table, containing information. Linux extended filesystems such as ext2 or ext3 maintain an array of these inodes: the inode table. This table contains list of all files in that filesystem. The individual inodes in inode table have a unique number (unique to that filesystem), the inode number.
+Inod - entry in inode table, containing information. Linux extended filesystems such as ext2 or ext3/ext4 maintain an array of these inodes: the inode table. This table contains list of all files in that filesystem. The individual inodes in inode table have a unique number (unique to that filesystem), the inode number.
 Inod contains all of the file’s metadata: list of all the blocks in which a file is stored, the owner information for that file, permissions and all other
 attributes, etc... 
 
@@ -79,9 +79,6 @@ bindfs is a FUSE filesystem for mounting a directory to another location.
 tmpfs - temporary filesystem that resides in memory and/or swap partition(s).
 
 CUPS - standards-based, open source printing system.
-
-rsync - open source utility that provides fast incremental file transfer, must be installed on both the source and the destination machine.
-Network file transfers use the SSH protocol by default and host can be a real hostname or a predefined profile/alias from .ssh/config.
 --------------------------------------------------------------------------------------------------------------------------------------
 System Calls:
 Fork(): it is used to create a new process
@@ -91,6 +88,7 @@ Exit(): it is used to exit or terminate the process
 Getpid(): it is used to find the unique process ID
 Getppid(): it is used to check the parent process ID
 Nice(): it is used to bias the currently running process property
+chmod(): change the access permissions of file system objects
 -----------------------------------------------------------------------------------
 GRUB(GRand Unified Bootloader) is a multi-boot loader.
 /boot/grub/grub.cfg

@@ -40,6 +40,7 @@ cat /etc/X11/default-display-manager (display manager in use)
 HDD:
 lsblk (--fs/-f) (hdd partitions)
 fdisk -l (hdd partitions)
+parted -l (hdd partitions)
 df -H/T (filesystems, free space and volumes,-i for inodes info)
 mount (mounted file systems)
 findmnt (list all mounted file systems)

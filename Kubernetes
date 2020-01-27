@@ -13,28 +13,39 @@ kubectl [command] [TYPE] [NAME] [flags]
 kubectl config view (show kubernates info about clasters)
 kubectl cluster-info (Display endpoint information about the master and services in the cluster)
 kubectl get services -A (List all services in the namespace)
-kubectl describe service -n <namespace> <servicename> (service info)
 kubectl get service -n <namespace> <servicename> -o json/yaml (service info in json/yaml format)
 kubectl get ingress -A (show ingress)
 kubectl get endpoints -A (show endpoints)
 kubectl get nodes (list all nodes in claster)
-kubectl describe node <nodename> (node info)
 kubectl get pods -A (get all pods in current namespace)
 kubectl get pods -o wide -n <namespace> (List all pods in the namespace, with more details)
 kubectl create -f /path/to/.yaml (Create one or more resources from a file)
 kubectl apply -f /path/to/.yaml (Create a resources using the definition in a .yaml config)
 kubectl apply -f <namespace> -R (recursively apply new eviroment using all files in enviroment directory)
 kubectl delete -f /path/to/.yaml (Delete resources specified in a .yaml config)
-kubectl delete pods -n <namespace> <pod name> (delete and recreate pod)
+kubectl delete pods -n <namespace> <podname> (delete and recreate pod)
+kubectl delete statefulset  <namespace> <statefulsetname> (delete statefulset and its pods)
 kubectl delete -f <namespace> -R (recursively delete enviroment)
-kubectl describe pod -n <namespace> <pod name> (get pod details)
-kubectl logs -n <namespace> <pod name> (get pod logs if eny present)
-kubectl exec -it -n <namespace> <pod name> bash (exec bash in pod)
-kubectl port-forward -n <namespace> <pod name> 5432:5432 (port forvard from system to pod)
+kubectl logs -n <namespace> <podname> (get pod logs if eny present)
+kubectl exec -it -n <namespace> <podname> bash (exec bash in pod)
+kubectl port-forward -n <namespace> <podname> 5432:5432 (port forvard from system to pod)
 kubectl get configmap <some file> -o yaml > <configname>.yaml (create confignmap from file)
+kubectl get pv (show Persistent Volume Claims)
+kubectl get pvc -n <namespace> (show Persistent Volumes)
+kubectl get sc -n <namespace> (show storage classes)
+kubectl delete pvc <claimname> (delete the claim to release the volume)
+
+kubectl get <resource> -n <namespace> <resourcename> -o yaml (get yaml of specific resource)
+
+kubectl describe node <nodename> (node info)
+kubectl describe rc ${CONTROLLER_NAME} (introspect events related to the replication controller)
+kubectl describe pod/service/pvc/sc -n <namespace> <resourcename> (info about resource)
 
 # for each service, for each port, if nodePort is defined, print nodePort
 kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{.}}{{"\n"}}{{end}}{{end}}{{end}}'
+
+# delete all evicted pods
+kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f - 
 =============================================================================
 
 A Kubernetes cluster consists of two types of resources:

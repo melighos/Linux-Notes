@@ -84,9 +84,8 @@ blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed wit
 
 mkpasswd -m sha-512 (create hashed password)
 
-$ logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
-
-$ logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
+logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
+logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -95,6 +94,7 @@ netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
 
 wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
 wget -r -np -R "index.html*" http://example.com/configs/.vim/ (-np/--no-parent - download only needed folder, -r/--recursive, -R/--reject)
+for i in {1..3}; do wget -rnp -c -N [url]&; done; (king of multithread wget, not very pretty)
 
 mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
 
@@ -110,6 +110,15 @@ dhclient -v eth0 (request new IP address using dhcp)
 
 # check the private key and the certificate match
 (openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
+
+# create psql dump from conteiner mounted to mounted kuber pod
+pg_dump --host '127.0.0.1' --port 5432 --username "postgres" --no-password --file "/root/mydb.backup" "wemineos"
+
+# create database for restore the backup.
+psql -h 'localhost' -p 5432 -U postgres -c "CREATE DATABASE mydatabase"
+
+# restore the backup.
+pg_restore --host 'localhost' --port 5432 --username "postgres" --dbname "mydatabase" --no-password --clean "/home/dinesh/db/mydb.backup"
 -----------------------------------------------------------------------------------------
 zip:
 zip -r music /home/yourname/music/ (create archive)
@@ -118,10 +127,12 @@ zip myfilename.zip -r /home/wikileaks -e (encrypt archive)
 zip zipfilename -d [name of file in archive] (delete files from a zipped archive)
 unzip -l test.zip (show zip archive content)
 unzip test.zip (decompress archive)
+gzip -dc < file.gz > /somewhere/file (decompress a .gz file to specific directory)
 
 tar:
 tar -zcvf archive.tar.gz path/to/folder (create archive + compress(z - gzip, c - create archive, v - verbose, f - give specific name))
 tar -zxvf archive.tar.gz (decompress archive(x - extract))
+tar -C /myfolder -zxvf archive.tar.gz (extract to another directory)
 tar tvf archive.tar (view an existing tar archive)
 tar xf archive.tgz filename (extract specific file)
 -------------------------------------------------------------------------------------
@@ -156,6 +167,8 @@ ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
 ps -eo ppid,pid,user,stat,pcpu,comm,wchan:32 (list of processes, '-' is when the process is running or the name of kernel function in which process is sleeping)
 
 kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
+
+kill -s SIGCHLD [parent's pid] (ask the parent to kill its zombie child)
 ------------------------------------------------------------------------------------------
 mount:
 mount /dev/device /mountpoint (mount device)
@@ -368,8 +381,8 @@ journalctl _PID=8088 (log entries that involve specified PID)
 journalctl _UID=x/_GID=x (log entries that involve specified user/group)
 journalctl /bin/bash (log entries that involve executable)
 
-timedatectl set-timezone 'zone' (set timezone for systemd jurnalctl)
-timedatectl status (current timezone status for systemd log)
+timedatectl status (current timezone status)
+timedatectl set-timezone 'zone' (set timezone for systemd)
 -----------------------------------------------------------------------------------------
 Nmap:
 nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
@@ -491,6 +504,9 @@ ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - don't login, -D - Dynamic 
 
 ssh -D 9000 -f -C -q -N user@host (-D create a SOCKS tunnel on the the port 9000, -C compresses, -q enables quiet mode, -f forks the process to the background)
 ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disable pseudo-terminal allocation, -p port, -i different private keys)
+
+ssh user@host 'COMMAND1; COMMAND2; COMMAND3' (run multiple command on a remote host over ssh)
+ssh user@host 'bash -s' < SCRIPT (Run Bash Script on Remote Server)
 ----------------------------------------------------------------------------------------------
 Compiling:
 ./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))
