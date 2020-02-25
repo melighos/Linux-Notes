@@ -278,7 +278,6 @@ PAM is dynamically linked at runtime, login application is pam-aware and must, t
 SSH - secure shell, an encrypted protocol used to administer and communicate with servers.
 etc/ssh/sshd_config (config for ssh server)
 ~/.ssh/authorized_keys (in that file, public key needs to be concatenated on remote server)
-ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
 ssh-agent - program which caches your decrypted private keys and provides them to SSH client programs on your behalf.
 eval $(ssh-agent)
 ssh-add ~/.ssh/id_rsa (add key to ssh-agent cache)

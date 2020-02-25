@@ -436,6 +436,8 @@ tcpdump -i "interface" -vvnn proto \\icmp (captures using the specified protocol
 tcpdump -i "interface" -n vlan 100 (show tagged VLAN traffic)
 tcpdump -i "interface" not and or (not - negating a filter match, and/or - combining filters)
 tcpdump -nei "interface" -Q in/out host 192.168.252.125 and port 8080 (-Q direction, choose send/receive direction for which packets should be captured)
+
+tcpdump -i "interface" ether proto 0x88cc -v -c 5 (possibly capture Ethernet traffic)
 -------------------------------------------------------------------------------------------------
 curl:
 curl -Iv https://www.site.com/ or 'ip address:port' (transfer data from or to a server to test connectivity)
@@ -507,6 +509,9 @@ ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disab
 
 ssh user@host 'COMMAND1; COMMAND2; COMMAND3' (run multiple command on a remote host over ssh)
 ssh user@host 'bash -s' < SCRIPT (Run Bash Script on Remote Server)
+ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.txt (Don't check host identity, run command on remote host and redirect its output to file on local host)
+
+ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
 ----------------------------------------------------------------------------------------------
 Compiling:
 ./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))

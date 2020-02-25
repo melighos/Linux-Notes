@@ -31,9 +31,12 @@ arguments:
 --oom-kill-disable (hung container if it's memory consumption exceeds your -m VALUE, or otherwise it will be just killed by oom-killer)
 
 
-Dockerfile commans:
+docker command examples:
 docker build (build docker image)
 docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+docker run --name postges --rm -it -v $(pwd):/root --network host postgres bash
+docker run -it --rm --link db:db postgres psql -h db -U postgres
+docker run --rm -ti ubuntu /bin/bash (execute bash in ubuntu container with interactive shell, and remove conteiner after logout)
 docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 --vm-bytes 2000M --vm-hang 0 
 
 Dockerfile example:
@@ -47,34 +50,94 @@ connecting containers through networks required for your app to work.
 Compose preserves all volumes used by the services defined in the compose file, thus no data is lost when the containers are recreated using docker-compose up.
 
 commands:
-docker-compose up -d
-docker-compose down
-docker-compose start
-docker-compose stop
+docker-compose up -d (execute docker-compose.yaml, -d - detach)
+docker-compose -f /root/docker-compose.yml up -d (execute docker-compose.yaml from another location)
+docker-compose down (bring down docker-compose project)
+docker-compose start <service> (start docker-compose service)
+docker-compose stop <service> (stop docker-compose service)
+docker-compose restart <service> (restart docker-compose service)
+docker-compose ps (list docker-compose containers)
+docker-compose exec <servicename> sh/bash (Attach to container from docker-compose)
+docker-compose logs -f (show docker-compose project logs, -f - follow logs)
+docker-compose events <servicename> (Stream container events for every container in the project)
+
 docker-compose build
-docker-compose logs -f db
 docker-compose scale db=4
-docker-compose events
-docker-compose exec db bash
+-----------------------------------------------------
+docker-compose.yml examples:
 
-Examples:
-
-docker-compose.yml looks like this:
-version: '3'
+version: '3.3'
 services:
-  web:
-    build: .
+  influxdb:
+    image: influxdb:latest
+    env_file: configuration.env
+    container_name: influxdb
     ports:
-    - "5000:5000"
+      - '8086:8086'
     volumes:
-    - .:/code
-    - logvolume01:/var/log
-    links:
-    - redis
-  redis:
-    image: redis
-volumes:
-  logvolume01: {}
--------------------------------------
+      - /opt/docker/influxdb:/var/lib/influxdb
+    restart:
+      always
 
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    depends_on:
+      - influxdb
+    env_file: configuration.env
+    links:
+      - influxdb
+    ports:
+      - '3000:3000'
+    volumes:
+      - /opt/docker/grafana:/var/lib/grafana
+      - /opt/docker/grafana/provisioning/:/etc/grafana/provisioning/
+      - /opt/docker/grafana/dashboards/:/var/lib/grafana/dashboards/
+    restart:
+      always
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 10.10.0.0/16 
+
+---------
+version: '3.6'
+services:
+  influxdb:
+    image: influxdb:1.7-alpine
+    env_file: configuration.env
+    ports:
+      - '8086:8086'
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:6.3.3
+    depends_on:
+      - influxdb
+    links:
+      - influxdb
+    ports:
+      - '3000:3000'
+    environment:
+      - RACK_ENV=development
+      - SHOW=true
+      - SESSION_SECRET
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+
+volumes:
+  grafana_data: {}
+  influxdb_data: {}
 
