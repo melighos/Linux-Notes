@@ -86,6 +86,11 @@ mkpasswd -m sha-512 (create hashed password)
 
 logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
 logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
+
+su www-data -s /bin/sh (switch to worker user)
+ulimit -a, ulimit -Hn, ulimit -Sn (show limits)
+
+split -d -l 200 httpd.log log (split the file into multiple pieces, -l number of lines, prefix named 'log' and add numbers to the suffix using the option -d)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -220,8 +225,8 @@ apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (rei
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 
-apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (install kernel)
-apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (remove kernel)
+apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (remove kernel)
+apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (install kernel)
 -------------------------------------------------------------------------------------------
 dpkg:
 dpkg -i packagename (install package)
@@ -310,6 +315,8 @@ sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' f
 # 's/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g' - looks for a duplicated word consisting of alphanumeric characters and removes the second occurrence
 # 'ta' If the last substitution command resulted in a change, jumps back to label 'a' to try again, the code keeps looking for duplicates until none remain
 # 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
+
+sed -n -e '10,100p' input.txt > output.txt (-n don't print each line, -e execute as a sed script, starting on line 10, until line 100 (inclusive), print (p) that line)
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
@@ -510,6 +517,7 @@ ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disab
 ssh user@host 'COMMAND1; COMMAND2; COMMAND3' (run multiple command on a remote host over ssh)
 ssh user@host 'bash -s' < SCRIPT (Run Bash Script on Remote Server)
 ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.txt (Don't check host identity, run command on remote host and redirect its output to file on local host)
+ssh -o ConnectTimeout=10 user@host (set connection timeout)
 
 ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
 ----------------------------------------------------------------------------------------------
@@ -524,6 +532,7 @@ checkinstall (create a package from binaries to register the software with the D
 Git:
 git clone <url> (clone git project from web)
 git clone --recurse-submodules -j8 <url> (git clone including submodules)
+git clone <url> folder-name (clone to specific directory)
 git init (create git database in current directory)
 git status (git status for current directory)
 git add hello.html (Staging the changes to file)
@@ -534,11 +543,13 @@ git commit -m "comment" (commit staged changes)
 git commit --amend -m "comment" (change the previous commit)
 git revert HEAD --no-edit (create a commit that deletes the changes saved by unwanted commit)
 git reset --hard <hash> (changes the branch pointer to point at any commit in the tree)
+git revert HEAD~1..HEAD (Revert the branch to the previous commit)
 git log --all (see git log)
 git log --pretty=oneline (single line format)
 git remote add <name> <url> (add remote repository to local git database)
 git push -u <name> <branch_name> (push changes to new remote repository, or to new branch)
 git push (push changes to remote repository)
+git pudh -f (force push your current branch status, will override remote status)
 git pull (pull changes from remote repository)
 git branch (show current branch)
 git branch -a (show all branches)
@@ -604,11 +615,13 @@ rsync -a --delete --quiet -e ssh /folder/to/backup user@host:/location/of/backup
 rsync -r --progress source destination (transferring and synchronizing local files, -r -recursive)
 rsync -av --progress --delete source destination (sync the contents of source to destination on the same system)
 rsync -ve ssh source user@host:destination (transferring and synchronizing remote files, -u - ignore same files)
-rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file (download from a server)
+rsync --progress -avHe ssh user@server:/path/to/file /home/user/path/to/file (download from a server)
 rsync -avH --progress /home/user/path/to/file -e ssh user@server:/path/to/file (upload to a server)
 rsync -a --include '*/' --include '*.txt' --exclude '*' source/ target/  (Copy specific file type keeping the folder structure)
 
 rsync -ravz -e "ssh -p 2222" user@example.com:/files/ /local/files/ (connect to server though ssh on port 2222 and sync all files from /files/ to /local/files)
+rsync -e "ssh -p 12022 -o StrictHostKeyChecking=no" -ravz user@example.com:/files/ /local/files/ (same as above but with option StrictHostKeyChecking=no)
+rsync -Pav -e "ssh -i $HOME/.ssh/somekey" username@hostname:/from/dir/ /to/dir/ (download from a server using ssh key)
 -----------------------------------------------------------------------------------------
 gdb:
 gdb /path/to/file (start an app with debug)

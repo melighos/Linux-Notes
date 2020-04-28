@@ -323,4 +323,10 @@ In addition, Linux allows mounts to be declared as shared, slave, private or unb
 LD_LIBRARY_PATH - Environment variable, colon-separated set of directories where libraries should be searched for first, before the standard set of directories.
 This is useful when debugging a new library or using a nonstandard library for special purposes.
 
+Maximum Number Of Open Files / File Descriptors (FD)
+User to specific limits "etc/security/limits.conf" :
+httpd soft nofile 4096
+httpd hard nofile 10240
+# run "sysctl -p" update limits after change
+----
 

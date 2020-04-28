@@ -41,6 +41,8 @@ kubectl describe node <nodename> (node info)
 kubectl describe rc ${CONTROLLER_NAME} (introspect events related to the replication controller)
 kubectl describe pod/service/pvc/sc -n <namespace> <resourcename> (info about resource)
 
+kubectl rollout restart <resourcetype> -n <namespace> <resourcename> (reload resource)
+
 # for each service, for each port, if nodePort is defined, print nodePort
 kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{.}}{{"\n"}}{{end}}{{end}}{{end}}'
 

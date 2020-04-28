@@ -9,6 +9,8 @@ ansible all -m ping (Check if all the nodes listed in the inventory are alive)
 ansible-playbook --ask-become-pass syu.yml (run the playbook script, use password to login)
 ansible-playbook -i hosts site.yml (run the playbook script, -i use specific host file)
 ansible-playbook -i staging deploy.yml (same as above but "staging" is directory now)
+ansible-playbook foo.yml --check (Dry Run, will not make any changes on remote systems)
+ansible-playbook -vvv playbook.yml (run playbook with all defaults)
 ---------------------------------------------------------
 Infrastructure is listed in the Ansible inventory file, you can specify a different inventory file using the -i command line switch.
 /etc/ansible/hosts

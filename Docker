@@ -3,19 +3,32 @@ Image(OS,dependencies,application code) - snapshot to run in container.
 Dockerfile - list of steps to perform in Container using specified Image
 
 commands:
+docker info (general docker info)
 docker ps (show running containers)
 docker ps -a (show all containers)
 docker stats (running containers info)
 docker container prune (remove all stopped containers)
-docker images (show docker images)
 docker logs <container-id|container-name> (get logs from container)
 docker network ls (show all docker networks)
 docker volumes ls (show all docker volumes)
+docker rm --force <name> (remove container)
+docker system prune -a (clean up unused containers, networks, images)
+
 docker exec <container-id|container-name> <command> (execute command in container)
 docker exec -it CONTAINER_NAME /bin/bash (start a shell inside a Docker container)
+docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+docker stop <container-id> (stop container)
 docker attach <container-id|container-name> (attach to a running container)
-dockr build -t <name> -f ./.dockerfile . (build docker image, -t - tag, -f - dockerfile to use)
+
 docker run (run container with specified arguments)
+docker run --rm -ti ubuntu /bin/bash (execute bash in ubuntu container with interactive shell, and remove conteiner after logout)
+docker run -d --privileged=true --name=contname image-name ()
+docker run --publish 8000:8080 --detach --name <name> <image:version> (--detach - run in the background, --publish - expose port)
+docker run --name postges --rm -it -v $(pwd):/root --network host postgres bash
+docker run -it --rm --link db:db postgres psql -h db -U postgres
+docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 --vm-bytes 2000M --vm-hang 0 
+docker run -it -p 8545:8545 -p 30303:30303 -v $PWD:/root/.ethereum ethereum/client-go --rpc --rpcaddr "0.0.0.0" --syncmode full
+docker run --rm -it ethereum/client-go attach http://172.18.20.219:8545
 
 docker-enter <container-id|container-name> (get a shell inside the container)
 docker-enter <container-id|container-name> df -h (run commands in container)
@@ -30,16 +43,83 @@ arguments:
 --memory-swap 256m (set swap limit)
 --oom-kill-disable (hung container if it's memory consumption exceeds your -m VALUE, or otherwise it will be just killed by oom-killer)
 
+------------------------------------------------------------
+docker image command:
+docker image ls -a (show all local images)
+docker rmi -f <image id>
+docker build --tag <image name> . (build docker image in current directory)
+dockr build -t <image nam> -f ./.dockerfile . (-t tag, -f specify docker file to use)
+docker save <image-name> > <image-name>.tar (create a tarball of our local docker image)
+docker load -i <image-name>.tar (load image from a tarball)
+----------------------------------------------------------------------
+Dockerfile for building image examples:
+--
+FROM debian:9
 
-docker command examples:
-docker build (build docker image)
-docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
-docker run --name postges --rm -it -v $(pwd):/root --network host postgres bash
-docker run -it --rm --link db:db postgres psql -h db -U postgres
-docker run --rm -ti ubuntu /bin/bash (execute bash in ubuntu container with interactive shell, and remove conteiner after logout)
-docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 --vm-bytes 2000M --vm-hang 0 
+# Copy the whole system except what is specified in .dockerignore
+COPY / /
 
-Dockerfile example:
+# Commands
+RUN mkdir -p /var/log/nginx \
+ && chown root:root /usr/bin/sudo \
+ && chmod 4755 /usr/bin/sudo \
+
+# Launch all services
+ENV VAR_LINUX_USER="admin" \
+VAR_FINAL_COMMAND=["bash","/var/www/get-wemine-back.sh; /var/www/get-wemine-ui.sh; /var/www/all-restart.sh"]
+
+--
+FROM huggla/alpine-slim:20180927-edge as stage1
+
+ARG APKS="<add package with executable here>"
+
+COPY ./rootfs /rootfs
+
+RUN apk --no-cache add $APKS \
+ && apk --no-cache --quiet info > /apks.list \
+ && apk --no-cache --quiet manifest $(cat /apks.list) awk -F " " '{print $2;}' > /apks_files.list \
+ && tar -cvp -f /apks_files.tar -T /apks_files.list -C / \
+ && tar -xvp -f /apks_files.tar -C /rootfs/ \
+ && mkdir -p /rootfs/usr/local/bin \
+ && cp -a <executable> /rootfs/usr/local/bin/
+
+FROM huggla/base:20180927-edge
+
+ENV VAR_LINUX_USER="<Linux user to run final command>" \
+    VAR_FINAL_COMMAND="<command for running executable>"
+---------------------------------------------------------------
+Files and Directories to ignore when building docker image:
+
+.dockerignore:
+# Remove folders:
+/dev 
+/proc
+/sys
+/tmp
+/run
+/mnt
+/media
+/lost+found
+/var/log
+/var/cache
+
+# Remove useless heavy files like /var/lib/scrapyd/reports.old
+**/*.old
+**/*.log
+**/*.bak
+
+# Remove docker
+/var/lib/lxcfs
+/var/lib/docker
+/etc/docker
+/root/.docker
+/etc/init/docker.conf
+
+# Remove the current program
+/.dockerignore
+/Dockerfile
+-----------------------------------------------------------------
+Dockerfile for building image examples:
 
 
 -----------------------------------------------------------------
