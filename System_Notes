@@ -192,6 +192,10 @@ setfacl -dm "entry" <dir> (newly created files or directories will inherit entri
 setfacl -x "entry" <file/dir> (remove a specific entry)
 setfacl -b <file/dir> (remove all entries)
 
+Visudo:
+sudo visudo (modify sudoers config)
+user ALL=(ALL) NOPASSWD: ALL
+
 rsyslog - syslog implementation that offers many benefits. It can be configured to receive log entries from systemd's journal
 in order to process or filter them before quickly writing them to disk or sending them over network.
 /etc/rsyslog.conf
@@ -322,6 +326,9 @@ In addition, Linux allows mounts to be declared as shared, slave, private or unb
 
 LD_LIBRARY_PATH - Environment variable, colon-separated set of directories where libraries should be searched for first, before the standard set of directories.
 This is useful when debugging a new library or using a nonstandard library for special purposes.
+
+PATH - environmental variable that tells the shell which directories to search for executable files.
+export PATH="$HOME/bin:$PATH" (temporary add some location to path)
 
 Maximum Number Of Open Files / File Descriptors (FD)
 User to specific limits "etc/security/limits.conf" :

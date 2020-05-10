@@ -110,6 +110,7 @@ cat /proc/sys/kernel/random/entropy_avail (amount of bytes of entropy currently 
 getent passwd/group (list users/group)
 umask VALUE (set user permission mask or show the current mask value if run the command without VALUE)
 groups 'user' (user group membership)
+id (same as above, but a bit more info)
 groupmod (modifies group attributes)
 gpasswd -a 'user' 'group' (add user to a group)
 gpasswd -d 'user' 'group' (remove user from a group)
