@@ -8,7 +8,6 @@ docker ps (show running containers)
 docker ps -a (show all containers)
 docker stats (running containers info)
 docker container prune (remove all stopped containers)
-docker logs <container-id|container-name> (get logs from container)
 docker network ls (show all docker networks)
 docker volumes ls (show all docker volumes)
 docker rm --force <name> (remove container)
@@ -16,10 +15,13 @@ docker system/container/image/volume/network prune -a (clean up unused container
 docker container rm <id>
 
 docker exec <container-id|container-name> <command> (execute command in container)
-docker exec -it CONTAINER_NAME /bin/bash (start a shell inside a Docker container)
-docker exec -it <container-id|container-name> bash (execute bash in container with interactive shell)
+docker exec -it <container-id|container-name> /bin/bash (start a shell inside a Docker container)
 docker stop <container-id> (stop container)
 docker attach <container-id|container-name> (attach to a running container)
+
+docker logs <container-id|container-name> (get logs from container)
+docker logs --tail 50 --follow --timestamps <container-id|container-name> (get logs from container)
+docker inspect <container-id|container-name> (get datailed info about container)
 
 docker run (run container with specified arguments)
 docker run --rm -ti ubuntu /bin/bash (execute bash in ubuntu container with interactive shell, and remove conteiner after logout)
@@ -30,7 +32,6 @@ docker run --name postges --rm -it -v $(pwd):/root --network host postgres bash
 docker run -it --rm --link db:db postgres psql -h db -U postgres
 docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 --vm-bytes 2000M --vm-hang 0 
 docker run -it -p 8545:8545 -p 30303:30303 -v $PWD:/root/.ethereum ethereum/client-go --rpc --rpcaddr "0.0.0.0" --syncmode full
-docker run --rm -it ethereum/client-go attach http://172.18.20.219:8545
 
 docker-enter <container-id|container-name> (get a shell inside the container)
 docker-enter <container-id|container-name> df -h (run commands in container)
@@ -63,22 +64,7 @@ docker save <image-name> > <image-name>.tar (create a tarball of our local docke
 docker load -i <image-name>.tar (load image from a tarball)
 ----------------------------------------------------------------------
 Dockerfile for building image examples:
---
-FROM debian:9
-
-# Copy the whole system except what is specified in .dockerignore
-COPY / /
-
-# Commands
-RUN mkdir -p /var/log/nginx \
- && chown root:root /usr/bin/sudo \
- && chmod 4755 /usr/bin/sudo \
-
-# Launch all services
-ENV VAR_LINUX_USER="admin" \
-VAR_FINAL_COMMAND=["bash","/var/www/get-wemine-back.sh; /var/www/get-wemine-ui.sh; /var/www/all-restart.sh"]
-
---
+---
 FROM huggla/alpine-slim:20180927-edge as stage1
 
 ARG APKS="<add package with executable here>"
@@ -97,6 +83,31 @@ FROM huggla/base:20180927-edge
 
 ENV VAR_LINUX_USER="<Linux user to run final command>" \
     VAR_FINAL_COMMAND="<command for running executable>"
+---
+FROM golang:1.11-alpine AS build
+
+# Install tools required for project
+# Run `docker build --no-cache .` to update dependencies
+RUN apk add --no-cache git
+RUN go get github.com/golang/dep/cmd/dep
+
+# List project dependencies with Gopkg.toml and Gopkg.lock
+# These layers are only re-built when Gopkg files are updated
+COPY Gopkg.lock Gopkg.toml /go/src/project/
+WORKDIR /go/src/project/
+# Install library dependencies
+RUN dep ensure -vendor-only
+
+# Copy the entire project and build it
+# This layer is rebuilt when a file changes in the project directory
+COPY . /go/src/project/
+RUN go build -o /bin/project
+
+# This results in a single layer image
+FROM scratch
+COPY --from=build /bin/project /bin/project
+ENTRYPOINT ["/bin/project"]
+CMD ["--help"]
 ---------------------------------------------------------------
 Files and Directories to ignore when building docker image:
 
