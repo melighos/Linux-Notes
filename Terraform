@@ -29,9 +29,14 @@ terraform plan -var env=dev (Generates an execution plan for Terraform using a v
 
 terraform apply -var "env=dev" -auto-approve (apply plan with a variable and auto-approve all questions)
 
+
 terraform refresh -var env=dev (reconcile the state Terraform knows about with the real-world infrastructure, does not modify infrastructure, but does modify the state file)
 
 terraform state list (list all resources in the state file matching the given addresses. If no addresses are given, all resources are listed)
+
+terraform destroy (destroy all infrastructure)
+terraform destroy -target RESOURCE_TYPE.NAME (destroy some specific resource)
+terraform apply --target RESOURCE_TYPE.NAME -var "env=dev" -auto-approve (apply specific resource)
 ===================================================================================================
 AWS:
 

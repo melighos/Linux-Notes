@@ -1,7 +1,5 @@
 Ctrl+alt+F1-F6 (command line shells)
 Ctrl+alt+F7 (GUI shell)
-Alt+SysRg+b (reboot, low-level commands understood by the Linux kernel)
-Alt+SysRg+o (shutdown, low-level commands understood by the Linux kernel)
 
 sudo !! (re-run previous command with 'sudo' prepended)
 ctrl-w (cut word behind cursor)
@@ -81,6 +79,9 @@ stap -e 'probe syscall.mkdir { printf("%s[%d] -> %s(%s)\n", execname(), pid(), n
 blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed with formatting a volume only when blkid fails)
 
 mkpasswd -m sha-512 (create hashed password)
+openssl rand -base64 16
+< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c20 () (random string)
+< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-10};echo; (random string)
 
 logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
 logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
@@ -89,6 +90,10 @@ su www-data -s /bin/sh (switch to worker user)
 ulimit -a, ulimit -Hn, ulimit -Sn (show limits)
 
 split -d -l 200 httpd.log log (split the file into multiple pieces, -l number of lines, prefix named 'log' and add numbers to the suffix using the option -d)
+
+ls -l /proc/<PID>/fd/ (process opened file descriptors)
+:q!
+echo 3 > /proc/sys/vm/drop_caches (clear the buffer-cache)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -101,14 +106,21 @@ export http_proxy=http://user:password@your-proxy-ip-address:port/ (set proxy en
 # check the private key and the certificate match
 (openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
 
+------------------------------------------------------------------
+postgresql:
+
 # create psql dump from conteiner mounted to mounted kuber pod
 pg_dump --host '127.0.0.1' --port 5432 --username "postgres" --no-password --file "/root/mydb.backup" "wemineos"
 
-# create database for restore the backup.
+# create database to restore the backup.
 psql -h 'localhost' -p 5432 -U postgres -c "CREATE DATABASE mydatabase"
 
 # restore the backup.
-pg_restore --host 'localhost' --port 5432 --username "postgres" --dbname "mydatabase" --no-password --clean "/home/dinesh/db/mydb.backup"
+pg_restore --host 'localhost' --port 5432 --username "postgres" --dbname "mydatabase" --no-password --clean "/home/mydb.backup"
+psql -f /path/to/mydb.backup (for plain text dumps)
+
+# simple database connection check
+pg_isready -d wemineos -h <database-ip> -p 5432 -U postgres
 -----------------------------------------------------------------------------------------
 network:
 netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
@@ -132,7 +144,7 @@ for i in {1..3}; do wget -rnp -c -N [url]&; done; (king of multithread wget, not
 
 curl -Iv https://www.site.com/ or 'ip address:port' (transfer data from or to a server to test connectivity)
 curl -x http://user:password@proxyhost:port site_to_connect.com (use proxy)
-
+curl -L -o filename.tar.gz http://filename-4.0.1.tar.gz (download file with curl, -L follow the redirects)
 -----------------------------------------------------------------------------------------
 zip:
 zip -r music /home/yourname/music/ (create archive)
@@ -173,6 +185,9 @@ dd:
 dd if=/dev/sda bs=1M | gzip -c -9 > sda.dd.gz (clone and compress the entire /dev/sda block device, bs=1M block size, -c --to-stdout, -9 compression ratio)
 dd if=/dev/zero bs=1M of=/dev/sda (overwrite the disk with zeros)
 dd if=/dev/urandom bs=1M of=/dev/sda (fill the disk with random data)
+-------------------------------------------------------------------------
+
+iotop -o -b -d 5 (list of processes that read/wrote to disk)
 ----------------------------------------------------------------------------------------------------------------
 ps:
 ps -aux (all running processes, BSD-style)
@@ -238,6 +253,15 @@ apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (rei
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 
+#Every time that dpkg must install a new conffile that you have modified it will stop the upgrade and wait your answer.
+apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade 	# or
+apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install mypackage1 mypackage2
+#you can give predefined answers to dpkg with the help of multiple --force-conf* options:
+#--force-confold - do not modify the current configuration file, you need to combine it with
+#--force-confdef to let dpkg overwrite configuration files that you have not modified.
+#--force-confnew - always install the new version of the configuration file, the current version is kept in a file with the .dpkg-old suffix.
+#--force-confmiss - ask dpkg to install the configuration file if it’s currently missing
+
 apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (remove kernel)
 apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (install kernel)
 -------------------------------------------------------------------------------------------
@@ -249,7 +273,7 @@ dpkg -l (list all packages)
 dpkg --get-selections | grep "hold" (packages on hold)
 dpkg-reconfigure (reconfigure  a  package  which   has   already   been   configured)
 dpkg -i --force-confmiss <package_deb>.deb (reinstall conffiles for a .deb)
-dpkg -S /path/to/file (name of the package that creates this file)
+dpkg -S /path/to/file (name of the package that creates this file, what package creates thise file)
 dpkg -S /path/to/dir/ (list every package that added to this dir)
 dpkg --add-architecture i386 (add an extra architecture)
 dpkg --remove-architecture <arch> (remove architecture)
@@ -306,6 +330,7 @@ find \( ! -uid `id -u` \) -o \( ! -gid `id -g` \) (find folders and files you do
 
 find . -iname "*_b.wav" -exec rename 's/_b.wav/.wav/' '{}' \; (rename files recursively, -iname - case in-sensitive)
 
+find . -type f -print0 | tr -d -c '\0' | wc -c (number of files, recursively)
 find . -type d -print0 | while read -d '' -r dir; do files=("$dir"/*); printf "%5d files in directory %s\n" "${#files[@]}" "$dir"; done  (number of files, recursively)
 
 find . -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" " (last modified files)
@@ -317,6 +342,7 @@ sed -e 'command1' -e 'command2' ... -e 'commandN' files (multiple sed commands)
 sed -i '10s/sh/quiet/g' (substitute the string sh with the string quiet only on line 10)
 sed -i 's/# */# /g' file (add space after a specified character in a string, * - matches zero or more occurrences of the previous character)
 sed -i 's/./& /15' file (add space at specified point in a string, . - matches any single character)
+sed -i '2 s/Python/perl/g' python.txt (apply only to specific line(2))
 sed '/^daemon/d' (deletes lines starting with daemon, ^ - matches the beginning of lines)
 sed '/sh$/d' (deletes all the lines ending with sh −, $ - matches the end of lines)
 /^$/    (Matches blank lines)
@@ -373,6 +399,9 @@ egrep --color "pattern1|pattern2|$" (colorized multiple pattern grep)
 
 grep -a -C 200 -F 'string' /dev/sdXN > OutputFile (find deleted plain text files on a hard drive by directly searching on the block device,
 unique string from the file you are trying to recover is needed, -C 200 - lines before and after each match of the string)
+
+grep -oP '(?<=after )[^ ]*' (search and display text that start from 'after')
+grep -Po '(?<=\after).+?(?=to)' (search and display text between 'after' ant 'to')
 ------------------------------------------------------------------------------------------------------------
 systemd:
 systemctl list-units (shows all loaded and active services, sockets, targets, timers, mounts and devices)
@@ -386,7 +415,6 @@ systemctl cat servicename.service (display the unit file)
 systemctl edit --full servicename.service (edit the unit file)
 systemctl list-dependencies servicename.service (unit’s dependency tree)
 systemctl list-dependencies --all servicename.service (recursively list all dependencies)
-systemctl daemon-reload (reloads unit files and systemd configuration)
 systemctl link /path/to/servicename.service (create symbolic link from one of the systemd services)
 systemctl -r --type service --all
 
@@ -394,10 +422,13 @@ systemctl --user (for user-space services)
 
 systemd-analyze blame (system boot-up performance)
 systemd-analyze critical-chain (system boot-up performance)
+
+systemctl daemon-reload (reloads unit files and systemd configuration)
+systemctl daemon-reexec (Reexecute the systemd manager)
 ---------------------------------------------------------------------------------------------------------
 journalctl -p 3 (systemd journal, specified priority, 0 emerg, 1 alert , 2 crit, 3 err, 4 warning, 5 notice, 6 info, 7 debug)
 journalctl --list-boots (list known boots)
-journalctl -b -2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
+journalctl -b 2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
 journalctl --since "2015-01-10 17:15:00" --until "2015-01-11 03:00" (show messages in requested time limits)
 journalctl -u 'nginx.service' (log messages for specified service)
 journalctl _PID=8088 (log entries that involve specified PID)
@@ -406,6 +437,7 @@ journalctl /bin/bash (log entries that involve executable)
 
 timedatectl status (current timezone status)
 timedatectl set-timezone 'zone' (set timezone for systemd)
+timedatectl set-time “13:50:00” (manually set time)
 -----------------------------------------------------------------------------------------
 Nmap:
 nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
@@ -531,6 +563,9 @@ ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.tx
 ssh -o ConnectTimeout=10 user@host (set connection timeout)
 
 ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
+
+ssh-add - <<< "${SSH_PRIVATE_KEY}" (add shh key from variable)
+ssh-add <(echo "$PRIVATE_KEY") (add shh key from variable)
 ----------------------------------------------------------------------------------------------
 Compiling:
 ./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))
@@ -570,7 +605,11 @@ git checkout <branch_name> (switch to another branch)
 git merge <branch_name> (merge current branch in to another branch)
 git tag (show tags)
 git tag <tag-name> (tag current commit with new tag)
-git push origin <tag-name> (push commit with tag)
+git push origin <tag-name> (Push the tag to the remote origin)
+
+git push origin :refs/tags/<tagname> (Delete the tag on any remote before you push)
+git tag -fa <tagname> (Replace the tag to reference the most recent commit)
+
 
 git config --global user.name <Your Name> (set up your name)
 git config --global user.email <your_email@whatever.com> (set up your e-mail)

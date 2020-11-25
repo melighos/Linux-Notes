@@ -283,6 +283,5 @@ coredumpctl (core dump journal)
 coredumpctl list (core dump journals list)
 coredumpctl gdb match, bt (examine the backtrace)
 LD_DEBUG=files appname > appname.log 2>&1 (what files an application is looking for)
-file /usr/bin/appname  (get more information)
 debugfs /dev/sdXN (file system debugger, used to examine and change the state of an ext2-4 file system)
 

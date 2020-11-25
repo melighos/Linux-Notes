@@ -160,10 +160,6 @@ memory" controller limits memory use, "cpuacct" accounts CPU usage
 # When the OOM killer is disabled, tasks that attempt to use more memory than they are allowed, will be paused until additional memory is freed.
 # under_oom entry reports the value 1 If the cgroup is out of memory and tasks in it are paused.
 
-udev - device manager for the Linux kernel.
-udev can be used to set up static device names, perform some action on a specific disk device, wake up functionality of a suspend USB device or disabling the wakeup functionality, etc...
-/etc/udev/rules.d/ (udev rules written by the administrator)
-
 Process Priority and Nice value:
 Nice(NI) value is a user-space and priority(PR) is the process's actual priority that use by Linux kernel.
 PR -- Priority. The scheduling priority of the task. If you see 'rt' in this field, it means the task is running under 'real time' scheduling priority.
@@ -235,13 +231,18 @@ echo 0(1) > /proc/sys/net/ipv4/ip_forward (temporary disable/enable the IP forwa
 /proc/sys/net/ipv4/ip_local_port_range (available ports range from unreserved source ports, default is 32768 to 61000)
 
 Maximum Number Of Open Files/File Descriptors (FD)
+System-Wide Limit "/etc/sysctl.conf" :
+fs.file-max = 2097152 (run 'sysctl -p' to update limits)
 User specific limits "/etc/security/limits.conf" :
-httpd soft nofile 4096
-httpd hard nofile 10240
+kafka hard nofile 1048576
+kafka hard nofile 1048576
 cat /proc/sys/fs/file-max (show current Open File Limit)
+ls -l /proc/PID/fd/ (opened file descriptors by specific process)
+maximum number of open files on some systems = 1048576 (2^20)
+you can try to set '9223372036854775807' this number simply means infinity
 
 /etc/sysctl.conf:
-fs.file-max=100000 # number of concurrently open file descriptors throughout the system
+fs.file-max=1048576 # number of concurrently open file descriptors throughout the system
 net.ipv4.ip_forward=1 # permanently disable/enable the IP forwarding
 net.ipv4.tcp_tw_reuse = 1 # append to disable/enable reuse of sockets in TIME_WAIT state, can cause problems
 net.ipv4.tcp_max_orphans = 65536 # max possible number of TCP sockets
@@ -251,10 +252,10 @@ net.ipv4.tcp_keepalive_intvl = 15 # interval between probes
 net.ipv4.tcp_keepalive_probes = 5 # number of probes to check connection, after with it will be closed
 net.ipv4.tcp_max_syn_backlog = 4096 # max number of remembered connection requests
 net.ipv4.tcp_synack_retries = 1 # number of attempts to resend SYNACK
-net.ipv4.tcp_mem = 50576   64768   98152 #
+net.ipv4.tcp_mem = 50576 64768 98152 
 net.ipv4.tcp_rmem = 4096 87380 16777216
 net.ipv4.tcp_wmem = 4096 65536 16777216
-net.ipv4.tcp_orphan_retries = 0 # number of fail attempts after with TCP connection will destroyed, 5 -default
+net.ipv4.tcp_orphan_retries = 0 # number of fail attempts after with TCP connection will destroyed, 5 - default
 net.ipv4.tcp_timestamps = 1 # temporary TCP timestamps
 net.ipv4.tcp_congestion_control = htcp # protocol in Kernel that control TCP
 net.ipv4.tcp_no_metrics_save = 1 # do not save TCP connection metrics in cache
@@ -324,7 +325,7 @@ SSH_AUTH_SOCK=0 (to temporary solve problem with gnome-keyring)
 MTP - Media Transfer Protocol
 If you use gvfs, then mtp devices can be found under:
 /run/user/$UID/gvfs/mtp* or /var/run/user/$UID/gvfs/
-For manual detect and connect tools like mtp-tools, mtpfs and libmtp needed:
+For manual detection and connection there are tools like mtp-tools, mtpfs and libmtp:
 mtp-detect (detect your device)
 mtp-connect (connect to your mtp device)
 mtp-folders (contained folders and their IDs)
@@ -363,6 +364,28 @@ This is useful when debugging a new library or using a nonstandard library for s
 
 PATH - environmental variable that tells the shell which directories to search for executable files.
 export PATH="$HOME/bin:$PATH" (temporary add some location to path)
+-----------------------------------------------------------------------
+There’s a provision in the Linux kernel for system requests (Sysrq on most keyboards). You can communicate directly with this subsystem using key combinations:
+Alt+SysRg+b (reboot, low-level commands understood by the Linux kernel)
+Alt+SysRg+o (shutdown, low-level commands understood by the Linux kernel)
+Make sure that the Sysrq system is enabled:
+sudo echo 1 > /proc/sys/kernel/sysrq
 
-----
+echo s > /proc/sysrq-trigger (emergency sync of the block devices)
+echo u > /proc/sysrq-trigger (mount readonly of all filesystems)
+echo b > /proc/sysrq-trigger (reboot)
+echo o > /proc/sysrq-trigger (poweroff)
 
+Kernel parameters can be managed during runtime with sysctl. There are lots of kernel parameters, and you can see them all with:
+sysctl --all
+You can query kernel parameters using the --value option:
+sudo sysctl --value kernel.panic
+If you get a 0 back, then the kernel you’re running has no special setting, at least by default, to reboot upon a kernel panic.
+You can activate this feature as an experiment:
+sudo sysctl kernel.reboot=1
+
+inotify - monitoring filesystem events
+The inotify API provides a mechanism for monitoring filesystem events.  Inotify can be used to monitor individual files, or to monitor directories.
+When a directory is monitored, inotify will return events for the directory itself, and for files inside the directory.
+cat /proc/sys/fs/inotify/max_user_watches (show current inotify value, 524288 - max)
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p (set inotify current value, and apply it)
