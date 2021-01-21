@@ -59,7 +59,7 @@ kubectl cp <some-pod>:/tmp/foo /tmp/bar (Copy a remote file from a Pod to a loca
 kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{.}}{{"\n"}}{{end}}{{end}}{{end}}'
 
 # delete all evicted pods
-kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f - 
+kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f -
 
 kubectl get pod -n qa-wemineos -l app=my-app -o jsonpath="{.items[0].metadata.name}" (get pod name using specified label)
 

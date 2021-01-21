@@ -202,6 +202,11 @@ kill:
 kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
 kill -s SIGCHLD [parent's pid] (ask the parent to kill its zombie child)
 ------------------------------------------------------------------------------------------
+pacmd list-sources | grep -e 'index:' -e device.string -e 'name:' (List available input sources)
+pacmd list-sinks | grep -e 'name:' -e 'index:' (list available output sinks)
+pacmd list-cards (information about your sound card)
+pacmd list-modules
+----------------------------------------------------------------------------------
 mount:
 mount /dev/device /mountpoint (mount device)
 mount -vf /dev/device /mountpoint (- v - verbose, -f - fake, causes  everything  to  be  done  except  for  the  actual  system call)
@@ -293,6 +298,7 @@ yum:
 yum check-update (check for updates)
 yum update package-name (update specific package)
 yum install package-name (install specific package)
+yum update --exclude=PACKAGENAME (skip installing or updating package)
 yum --showduplicates list package-name (show available versions of specific package)
 yum update-to package-version (update or install package to specific version)
 yum list installed (list all installed packages)
@@ -438,6 +444,7 @@ journalctl /bin/bash (log entries that involve executable)
 timedatectl status (current timezone status)
 timedatectl set-timezone 'zone' (set timezone for systemd)
 timedatectl set-time “13:50:00” (manually set time)
+timedatectl set-ntp true (enable network clock synchronizetion)
 -----------------------------------------------------------------------------------------
 Nmap:
 nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
@@ -602,6 +609,8 @@ git branch -a (show all branches)
 git checkout <hash> (checkout previous snapshot)
 git checkout -b <branch_name> (add new branch)
 git checkout <branch_name> (switch to another branch)
+git checkout -- . (discard all unstaged changes)
+git checkout -- path/to/file/to/revert (discard for a specific file)
 git merge <branch_name> (merge current branch in to another branch)
 git tag (show tags)
 git tag <tag-name> (tag current commit with new tag)
