@@ -36,6 +36,7 @@ docker run -it --rm -m 256m --memory-swap 256m --oom-kill-disable stress --vm 1 
 docker run -it -p 8545:8545 -p 30303:30303 -v $PWD:/root/.ethereum ethereum/client-go --rpc --rpcaddr "0.0.0.0" --syncmode full
 docker run --network=host --rm -ti ubuntu /bin/bash (host - use host network)
 docker run -d -t -i -e REDIS_NAMESPACE='staging' -name container_name dockerhub_id/image_name (-e pass environment variables)
+docker run -it --rm --cap-add=NET_ADMIN --device=/dev/net/tun --name=<contname> <image-name> (device=/dev/net/tun - create device, cap-add - add capabilities)
 
 docker-enter <container-id|container-name> (get a shell inside the container)
 docker-enter <container-id|container-name> df -h (run commands in container)

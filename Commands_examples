@@ -80,7 +80,7 @@ blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed wit
 
 mkpasswd -m sha-512 (create hashed password)
 openssl rand -base64 16
-< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c20 () (random string)
+< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c20;echo; (random string)
 < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-10};echo; (random string)
 
 logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
@@ -94,6 +94,8 @@ split -d -l 200 httpd.log log (split the file into multiple pieces, -l number of
 ls -l /proc/<PID>/fd/ (process opened file descriptors)
 :q!
 echo 3 > /proc/sys/vm/drop_caches (clear the buffer-cache)
+
+sysbench cpu --threads=2 run (cpu perfomance benchmark)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -364,6 +366,9 @@ sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' f
 # 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
 
 sed -n -e '10,100p' input.txt > output.txt (-n don't print each line, -e execute as a sed script, starting on line 10, until line 100 (inclusive), print (p) that line)
+
+#<fig><image href="NEW_VALUE" align="left" placement="break"
+sed 's/\(.*image href=\)[^ ]*\( .*\)/\1"NEW_VALUE"\2/' (replace the value in the first set of quotes, keeping the remainder of the line the same)
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
@@ -390,6 +395,9 @@ awk -F":" '/regexp/{print $2;next}{print $3}' filename (Print field number two o
 awk '{total += $1}END{ print total}' filename (add numbers from specific field and print total)
 awk '{total += $8}END{size=  total / 1024; printf "process total size %.2f MB\n", size}' (print process used memory)
 awk 'BEGIN {count=0}; $4 ~ /regex/ {count++};END{print "some text =",count}' filename
+
+#<fig><image href="NEW_VALUE" align="left" placement="break"
+awk '/href/{$2="href=\"New_value\""}1' file (replace the value in the first set of quotes, keeping the remainder of the line the same)
 --------------------------------------------------------------------------------------------------------------------
 grep -rv "word_to_be_ignored" /where/to/search/ | grep "word_to_be_searched" (-r - recursive, -v - exclude)
 grep -E "word1|word2|word3" (multiple word search)
