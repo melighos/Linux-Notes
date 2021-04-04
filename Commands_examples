@@ -118,12 +118,19 @@ zip myfilename.zip -r /home/wikileaks -e (encrypt archive)
 zip zipfilename -d [name of file in archive] (delete files from a zipped archive)
 unzip -l test.zip (show zip archive content)
 unzip test.zip (decompress archive)
+unzip < file.gz > file ()
 
 tar:
 tar -zcvf archive.tar.gz path/to/folder (create archive + compress(z - gzip, c - create archive, v - verbose, f - give specific name))
 tar -zxvf archive.tar.gz (decompress archive(x - extract))
 tar tvf archive.tar (view an existing tar archive)
 tar xf archive.tgz filename (extract specific file)
+
+Gzip:
+gzip file (create .gz archive)
+gzip -d file.gz (decompress .gz archive)
+gunzip file.gz (decompress .gz archive)
+gunzip -k file.gz (decompress .gz archive. -k - Keep(don't delete) input files during compression or decompression)
 -------------------------------------------------------------------------------------
 usermod:
 usermod -a -G groupname username (add a user in a new group, -a - append)
@@ -353,6 +360,8 @@ systemctl list-dependencies --all servicename.service (recursively list all depe
 systemctl daemon-reload (reloads unit files and systemd configuration)
 systemctl link /path/to/servicename.service (create symbolic link from one of the systemd services)
 systemctl -r --type service --all
+systemctl --failed (List failed units)
+systemctl status pid (Show the cgroup slice, memory and parent for a PID)
 
 systemctl --user (for user-space services)
 
@@ -575,6 +584,7 @@ readlink /proc/*/task/*/ns/* | sort -u (list of currently presented namespaces i
 unshare -u /bin/bash (create a shell in new UTS namespace)
 ----------------------------------------------------------------------------------------
 rsync:
+rsync -avh --progress /path/to/source /path/to/destination (copy file or folder)
 rsync -a --delete --quiet /folder/to/backup /location/of/backup (-a - archived and syncs recursively)
 rsync -a --delete local-file user@remote-host:remote-file (--delete - delete from destination if removed from source)
 rsync -a --exclude=pattern_to_exclude user@remote-host:remote-file local-file
@@ -587,7 +597,7 @@ rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file (download from
 rsync -avH --progress /home/user/path/to/file -e ssh user@server:/path/to/file (upload to a server)
 rsync -a --include '*/' --include '*.txt' --exclude '*' source/ target/  (Copy specific file type keeping the folder structure)
 
-rsync -ravz -e "ssh -p 2222" user@example.com:/files/ /local/files/ (connect to server though ssh on port 2222 and sync all files from /files/ to /local/files)
+rsync -arvH -e "ssh -p 2222" user@example.com:/files/ /local/files/ (connect to server though ssh on port 2222 and sync all files from /files/ to /local/files)
 -----------------------------------------------------------------------------------------
 gdb:
 gdb /path/to/file (start an app with debug)
