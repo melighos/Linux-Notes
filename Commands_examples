@@ -1,7 +1,5 @@
 Ctrl+alt+F1-F6 (command line shells)
 Ctrl+alt+F7 (GUI shell)
-Alt+SysRg+b (reboot, low-level commands understood by the Linux kernel)
-Alt+SysRg+o (shutdown, low-level commands understood by the Linux kernel)
 
 sudo !! (re-run previous command with 'sudo' prepended)
 ctrl-w (cut word behind cursor)
@@ -78,51 +76,91 @@ export LD_LIBRARY_PATH="/list/of/library/paths:/another/path" ./program (colon-s
 
 stap -e 'probe syscall.mkdir { printf("%s[%d] -> %s(%s)\n", execname(), pid(), name, argstr) }' (trace a system call)
 
-nsenter --target $(docker inspect --format {{.State.Pid}} <container_name_or_ID>) --mount --uts --ipc --net --pid (enter the docker container(not recommended))
-
 blkid "$VOLUME_NAME" || mkfs.ext4 "$VOLUME_NAME" (basically means to proceed with formatting a volume only when blkid fails)
 
 mkpasswd -m sha-512 (create hashed password)
+openssl rand -base64 16
+< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c20;echo; (random string)
+< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-10};echo; (random string)
 
-$ logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
+logrotate -vdf CONFIG_FILE or /etc/logrotate.d (Check what will happen when logrotate is forced)
+logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
 
-$ logrotate -vf CONFIG_FILE or /etc/logrotate.d (Manually force logrotate)
+su www-data -s /bin/sh (switch to worker user)
+ulimit -a, ulimit -Hn, ulimit -Sn (show limits)
+
+split -d -l 200 httpd.log log (split the file into multiple pieces, -l number of lines, prefix named 'log' and add numbers to the suffix using the option -d)
+
+ls -l /proc/<PID>/fd/ (process opened file descriptors)
+echo 3 > /proc/sys/vm/drop_caches (clear the buffer-cache)
+
+sysbench cpu --threads=2 run (cpu perfomance benchmark)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
 ---------------------------------------------------------------------------------------------
-netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
-
-wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
-wget -r -np -R "index.html*" http://example.com/configs/.vim/ (-np/--no-parent - download only needed folder, -r/--recursive, -R/--reject)
-
 mount.cifs //WindowsPC/Share /home/username/Windows-Share -o user=username (WindowsPC - computer name, user=username - Windows username)
 
 export http_proxy=http://your.proxy.server:port/ (set proxy environment variable)
 export http_proxy=http://user:password@your-proxy-ip-address:port/ (set proxy environment variable with username and password)
 
+# check the private key and the certificate match
+(openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
+
+------------------------------------------------------------------
+postgresql:
+
+# create psql dump from conteiner mounted to mounted kuber pod
+pg_dump --host '127.0.0.1' --port 5432 --username "postgres" --no-password --file "/root/mydb.backup" "wemineos"
+
+# create database to restore the backup.
+psql -h 'localhost' -p 5432 -U postgres -c "CREATE DATABASE mydatabase"
+
+# restore the backup.
+pg_restore --host 'localhost' --port 5432 --username "postgres" --dbname "mydatabase" --no-password --clean "/home/mydb.backup"
+psql -f /path/to/mydb.backup (for plain text dumps)
+
+# simple database connection check
+pg_isready -d wemineos -h <database-ip> -p 5432 -U postgres
+-----------------------------------------------------------------------------------------
+network:
+netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
+
 ip route add 192.168.200.0/24 via 127.0.0.1 (block IPs by null-routing, won't protect against most UDP attacks, packets from the remoute do reach the system)
 ip route add blackhole 192.168.0.195/32 (same as above)
 ip route flush cache (flush route cache to get the new routing rules to be used)
 
+ip addr flush dev eth0 (remove all addresses assignet to interface)
+
+brctl addbr br0 (creating the bridge interface("bridge-utils" should be installed))
+brctl addif br0 eth0 eth1 (add the interfaces that are going to be bridged, br0 will lead to the existing network)
+ip link set dev <bridge name> up (bring up the bridge interface)
+
 dhclient -v -r eth0 (releases the current dhcp lease)
 dhclient -v eth0 (request new IP address using dhcp)
 
-# check the private key and the certificate match
-(openssl rsa -noout -modulus -in private.key | openssl md5 ; openssl x509 -noout -modulus -in certificate.crt | openssl md5) | uniq
+wget -O myFile.txt domain.com/file.txt (save linked content under a desired name)
+wget -r -np -R "index.html*" http://example.com/configs/.vim/ (-np/--no-parent - download only needed folder, -r/--recursive, -R/--reject)
+for i in {1..3}; do wget -rnp -c -N [url]&; done; (king of multithread wget, not very pretty)
+
+curl -Iv https://www.site.com/ or 'ip address:port' (transfer data from or to a server to test connectivity)
+curl -x http://user:password@proxyhost:port site_to_connect.com (use proxy)
+curl -L -o filename.tar.gz http://filename-4.0.1.tar.gz (download file with curl, -L follow the redirects)
 -----------------------------------------------------------------------------------------
 zip:
-zip -r music /home/yourname/music/ (create archive)
+zip -r archivename.zip /path/to/folder/ (create archive)
 # to add new files to an existing archive or update the files in an archive, use the same name for the archive file when running the zip command
-zip myfilename.zip -r /home/wikileaks -e (encrypt archive)
+zip myfilename.zip -r /home/wikileaks -e ( -e encrypt archive)
 zip zipfilename -d [name of file in archive] (delete files from a zipped archive)
 unzip -l test.zip (show zip archive content)
 unzip test.zip (decompress archive)
 unzip < file.gz > file ()
+gzip -dc < file.gz > /somewhere/file (decompress a .gz file to specific directory)
 
 tar:
 tar -zcvf archive.tar.gz path/to/folder (create archive + compress(z - gzip, c - create archive, v - verbose, f - give specific name))
 tar -zxvf archive.tar.gz (decompress archive(x - extract))
+tar -C /myfolder -zxvf archive.tar.gz (extract to another directory)
 tar tvf archive.tar (view an existing tar archive)
 tar xf archive.tgz filename (extract specific file)
 
@@ -142,6 +180,9 @@ xinput --list (list input devises)
 xinput --list-props 'id' (avaliable parameters for device id)
 xinput --set-prop 'id' 'param' 'value' (set parameters for this dev id)
 xinput --query-state 'id' (current state of different variables for this device id)
+
+xrandr:
+xrandr --output HDMI-1 --right-of eDP-1 (for double monitor setup)
 --------------------------------------------------------------------------------------------------------
 tee:
 'command' | tee -a mylog.log (append command result output to a file and to a STDOUT(-a - append))
@@ -152,6 +193,9 @@ dd:
 dd if=/dev/sda bs=1M | gzip -c -9 > sda.dd.gz (clone and compress the entire /dev/sda block device, bs=1M block size, -c --to-stdout, -9 compression ratio)
 dd if=/dev/zero bs=1M of=/dev/sda (overwrite the disk with zeros)
 dd if=/dev/urandom bs=1M of=/dev/sda (fill the disk with random data)
+-------------------------------------------------------------------------
+
+iotop -o -b -d 5 (list of processes that read/wrote to disk)
 ----------------------------------------------------------------------------------------------------------------
 ps:
 ps -aux (all running processes, BSD-style)
@@ -161,9 +205,16 @@ ps -ely (all running processes)
 ps -aux | grep -F Z/R/S/D/T (find process by status: Z zombie, R running, S sleeping,D uninterruptible sleep/blocked state, T stopped, I idle)
 ps -ef | grep -E "PID1|PID2|PID3" | grep -v grep (search multiple process PIDs)
 ps -eo ppid,pid,user,stat,pcpu,comm,wchan:32 (list of processes, '-' is when the process is running or the name of kernel function in which process is sleeping)
-
+-----------------------------------------------------------
+kill:
 kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
+kill -s SIGCHLD [parent's pid] (ask the parent to kill its zombie child)
 ------------------------------------------------------------------------------------------
+pacmd list-sources | grep -e 'index:' -e device.string -e 'name:' (List available input sources)
+pacmd list-sinks | grep -e 'name:' -e 'index:' (list available output sinks)
+pacmd list-cards (information about your sound card)
+pacmd list-modules
+----------------------------------------------------------------------------------
 mount:
 mount /dev/device /mountpoint (mount device)
 mount -vf /dev/device /mountpoint (- v - verbose, -f - fake, causes  everything  to  be  done  except  for  the  actual  system call)
@@ -208,14 +259,24 @@ aptitude why packegename (Why it is installed)
 aptitude search '~i~Dpackegename' (What depends on this package)
 ppa-purge ppa:user/ppa-name  (automatically downgrade the software to its original version)
 apt-get install -f (remove not properly installed pakages)
+apt list --installed (show installed packages)
 
 apt install --install-recommends "package" (install recommended packages additionally to one in question)
 apt-get install --reinstall -o Dpkg::Options::="--force-confmiss" <package> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name> (reinstall package with its conffiles)
 apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" $(dpkg -S /etc/some/directory | sed 's/,//g; s/:.*//') (restore a directory to its default)
 
-apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (install kernel)
-apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (remove kernel)
+#Every time that dpkg must install a new conffile that you have modified it will stop the upgrade and wait your answer.
+apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade 	# or
+apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install mypackage1 mypackage2
+#you can give predefined answers to dpkg with the help of multiple --force-conf* options:
+#--force-confold - do not modify the current configuration file, you need to combine it with
+#--force-confdef to let dpkg overwrite configuration files that you have not modified.
+#--force-confnew - always install the new version of the configuration file, the current version is kept in a file with the .dpkg-old suffix.
+#--force-confmiss - ask dpkg to install the configuration file if it’s currently missing
+
+apt purge linux-headers-xx linux-headers-xx-generic linux-image-xx-generic linux-modules-xx-generic linux-modules-extra-xxx-generic (remove kernel)
+apt install linux-headers-xx linux-headers-xx-generic linux-image-xxx-generic linux-modules-xxx-generic linux-modules-extra-xxx-generic (install kernel)
 -------------------------------------------------------------------------------------------
 dpkg:
 dpkg -i packagename (install package)
@@ -225,7 +286,7 @@ dpkg -l (list all packages)
 dpkg --get-selections | grep "hold" (packages on hold)
 dpkg-reconfigure (reconfigure  a  package  which   has   already   been   configured)
 dpkg -i --force-confmiss <package_deb>.deb (reinstall conffiles for a .deb)
-dpkg -S /path/to/file (name of the package that creates this file)
+dpkg -S /path/to/file (name of the package that creates this file, what package creates thise file)
 dpkg -S /path/to/dir/ (list every package that added to this dir)
 dpkg --add-architecture i386 (add an extra architecture)
 dpkg --remove-architecture <arch> (remove architecture)
@@ -245,6 +306,7 @@ yum:
 yum check-update (check for updates)
 yum update package-name (update specific package)
 yum install package-name (install specific package)
+yum update --exclude=PACKAGENAME (skip installing or updating package)
 yum --showduplicates list package-name (show available versions of specific package)
 yum update-to package-version (update or install package to specific version)
 yum list installed (list all installed packages)
@@ -271,6 +333,8 @@ find . -type f -name "name" -exec rm -r --interactive=never {} + (never be inter
 find . -type f -not -name 'smart' -delete (-not - exclude)
 find / -inum 517333 (retrieve all filenames which point to an inode number)
 find / -type f -size +20M ( find all files larger than 20M)
+find / -user <username> (find all file belongs to a specific user)
+find / -group <groupname> (find all file belongs to a specific group)
 
 find . -type f -name "*.txt" -exec sed -i'' -e 's/old/new/g' {} + (replace every occurrence of 'old' with 'new' recursively)
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/old/new/g' (same but different method)
@@ -280,6 +344,7 @@ find \( ! -uid `id -u` \) -o \( ! -gid `id -g` \) (find folders and files you do
 
 find . -iname "*_b.wav" -exec rename 's/_b.wav/.wav/' '{}' \; (rename files recursively, -iname - case in-sensitive)
 
+find . -type f -print0 | tr -d -c '\0' | wc -c (number of files, recursively)
 find . -type d -print0 | while read -d '' -r dir; do files=("$dir"/*); printf "%5d files in directory %s\n" "${#files[@]}" "$dir"; done  (number of files, recursively)
 
 find . -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" " (last modified files)
@@ -291,6 +356,7 @@ sed -e 'command1' -e 'command2' ... -e 'commandN' files (multiple sed commands)
 sed -i '10s/sh/quiet/g' (substitute the string sh with the string quiet only on line 10)
 sed -i 's/# */# /g' file (add space after a specified character in a string, * - matches zero or more occurrences of the previous character)
 sed -i 's/./& /15' file (add space at specified point in a string, . - matches any single character)
+sed -i '2 s/Python/perl/g' python.txt (apply only to specific line(2))
 sed '/^daemon/d' (deletes lines starting with daemon, ^ - matches the beginning of lines)
 sed '/sh$/d' (deletes all the lines ending with sh −, $ - matches the end of lines)
 /^$/    (Matches blank lines)
@@ -304,6 +370,11 @@ sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' f
 # 's/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g' - looks for a duplicated word consisting of alphanumeric characters and removes the second occurrence
 # 'ta' If the last substitution command resulted in a change, jumps back to label 'a' to try again, the code keeps looking for duplicates until none remain
 # 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
+
+sed -n -e '10,100p' input.txt > output.txt (-n don't print each line, -e execute as a sed script, starting on line 10, until line 100 (inclusive), print (p) that line)
+
+#<fig><image href="NEW_VALUE" align="left" placement="break"
+sed 's/\(.*image href=\)[^ ]*\( .*\)/\1"NEW_VALUE"\2/' (replace the value in the first set of quotes, keeping the remainder of the line the same)
 -------------------------------------------------------------------------------------------------------------------
 awk:
 awk 'condition { action }' filename
@@ -330,6 +401,9 @@ awk -F":" '/regexp/{print $2;next}{print $3}' filename (Print field number two o
 awk '{total += $1}END{ print total}' filename (add numbers from specific field and print total)
 awk '{total += $8}END{size=  total / 1024; printf "process total size %.2f MB\n", size}' (print process used memory)
 awk 'BEGIN {count=0}; $4 ~ /regex/ {count++};END{print "some text =",count}' filename
+
+#<fig><image href="NEW_VALUE" align="left" placement="break"
+awk '/href/{$2="href=\"New_value\""}1' file (replace the value in the first set of quotes, keeping the remainder of the line the same)
 --------------------------------------------------------------------------------------------------------------------
 grep -rv "word_to_be_ignored" /where/to/search/ | grep "word_to_be_searched" (-r - recursive, -v - exclude)
 grep -E "word1|word2|word3" (multiple word search)
@@ -345,6 +419,9 @@ egrep --color "pattern1|pattern2|$" (colorized multiple pattern grep)
 
 grep -a -C 200 -F 'string' /dev/sdXN > OutputFile (find deleted plain text files on a hard drive by directly searching on the block device,
 unique string from the file you are trying to recover is needed, -C 200 - lines before and after each match of the string)
+
+grep -oP '(?<=after )[^ ]*' (search and display text that start from 'after')
+grep -Po '(?<=\after).+?(?=to)' (search and display text between 'after' ant 'to')
 ------------------------------------------------------------------------------------------------------------
 systemd:
 systemctl list-units (shows all loaded and active services, sockets, targets, timers, mounts and devices)
@@ -352,12 +429,12 @@ systemctl list-units --all (same as above but shows units regardless of whether 
 systemctl list-unit-files (show every available unit file within the systemd paths, including those that systemd has not attempted to load)
 systemctl list-unit-files --type=service (list of all services)
 systemctl status,stop,start,restart,reload,disable,enable "service" (managing services)
-systemctl mask/unmask servicename.service (mark/unmark a unit as completely unstartable, automatically or manually)
+systemctl mask/unmask name.service (mark/unmark a unit as completely unstartable, automatically or manually)
+systemctl mask/unmask name.target (enable/disable target)
 systemctl cat servicename.service (display the unit file)
 systemctl edit --full servicename.service (edit the unit file)
 systemctl list-dependencies servicename.service (unit’s dependency tree)
 systemctl list-dependencies --all servicename.service (recursively list all dependencies)
-systemctl daemon-reload (reloads unit files and systemd configuration)
 systemctl link /path/to/servicename.service (create symbolic link from one of the systemd services)
 systemctl -r --type service --all
 systemctl --failed (List failed units)
@@ -367,18 +444,23 @@ systemctl --user (for user-space services)
 
 systemd-analyze blame (system boot-up performance)
 systemd-analyze critical-chain (system boot-up performance)
+
+systemctl daemon-reload (reloads unit files and systemd configuration)
+systemctl daemon-reexec (Reexecute the systemd manager)
 ---------------------------------------------------------------------------------------------------------
 journalctl -p 3 (systemd journal, specified priority, 0 emerg, 1 alert , 2 crit, 3 err, 4 warning, 5 notice, 6 info, 7 debug)
 journalctl --list-boots (list known boots)
-journalctl -b -2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
+journalctl -b 2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
 journalctl --since "2015-01-10 17:15:00" --until "2015-01-11 03:00" (show messages in requested time limits)
 journalctl -u 'nginx.service' (log messages for specified service)
 journalctl _PID=8088 (log entries that involve specified PID)
 journalctl _UID=x/_GID=x (log entries that involve specified user/group)
 journalctl /bin/bash (log entries that involve executable)
 
-timedatectl set-timezone 'zone' (set timezone for systemd jurnalctl)
-timedatectl status (current timezone status for systemd log)
+timedatectl status (current timezone status)
+timedatectl set-timezone 'zone' (set timezone for systemd)
+timedatectl set-time “13:50:00” (manually set time)
+timedatectl set-ntp true (enable network clock synchronizetion)
 -----------------------------------------------------------------------------------------
 Nmap:
 nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
@@ -432,11 +514,8 @@ tcpdump -i "interface" -vvnn proto \\icmp (captures using the specified protocol
 tcpdump -i "interface" -n vlan 100 (show tagged VLAN traffic)
 tcpdump -i "interface" not and or (not - negating a filter match, and/or - combining filters)
 tcpdump -nei "interface" -Q in/out host 192.168.252.125 and port 8080 (-Q direction, choose send/receive direction for which packets should be captured)
--------------------------------------------------------------------------------------------------
-curl:
-curl -Iv https://www.site.com/ or 'ip address:port' (transfer data from or to a server to test connectivity)
-curl -x http://user:password@proxyhost:port site_to_connect.com (use proxy)
 
+tcpdump -i "interface" ether proto 0x88cc -v -c 5 (possibly capture Ethernet traffic)
 ----------------------------------------------------------------------------------------
 iptables:
 -t NAT,Filter,Mangle (add rule to the specific table)
@@ -500,6 +579,16 @@ ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - don't login, -D - Dynamic 
 
 ssh -D 9000 -f -C -q -N user@host (-D create a SOCKS tunnel on the the port 9000, -C compresses, -q enables quiet mode, -f forks the process to the background)
 ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disable pseudo-terminal allocation, -p port, -i different private keys)
+
+ssh user@host 'COMMAND1; COMMAND2; COMMAND3' (run multiple command on a remote host over ssh)
+ssh user@host 'bash -s' < SCRIPT (Run Bash Script on Remote Server)
+ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.txt (Don't check host identity, run command on remote host and redirect its output to file on local host)
+ssh -o ConnectTimeout=10 user@host (set connection timeout)
+
+ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
+
+ssh-add - <<< "${SSH_PRIVATE_KEY}" (add shh key from variable)
+ssh-add <(echo "$PRIVATE_KEY") (add shh key from variable)
 ----------------------------------------------------------------------------------------------
 Compiling:
 ./configure (execute a configuration script (checks for dependencies and compiler quirks then creates "make" files))
@@ -512,6 +601,7 @@ checkinstall (create a package from binaries to register the software with the D
 Git:
 git clone <url> (clone git project from web)
 git clone --recurse-submodules -j8 <url> (git clone including submodules)
+git clone <url> folder-name (clone to specific directory)
 git init (create git database in current directory)
 git status (git status for current directory)
 git add hello.html (Staging the changes to file)
@@ -522,21 +612,29 @@ git commit -m "comment" (commit staged changes)
 git commit --amend -m "comment" (change the previous commit)
 git revert HEAD --no-edit (create a commit that deletes the changes saved by unwanted commit)
 git reset --hard <hash> (changes the branch pointer to point at any commit in the tree)
+git revert HEAD~1..HEAD (Revert the branch to the previous commit)
 git log --all (see git log)
 git log --pretty=oneline (single line format)
 git remote add <name> <url> (add remote repository to local git database)
 git push -u <name> <branch_name> (push changes to new remote repository, or to new branch)
 git push (push changes to remote repository)
+git pudh -f (force push your current branch status, will override remote status)
 git pull (pull changes from remote repository)
 git branch (show current branch)
 git branch -a (show all branches)
 git checkout <hash> (checkout previous snapshot)
 git checkout -b <branch_name> (add new branch)
 git checkout <branch_name> (switch to another branch)
+git checkout -- . (discard all unstaged changes)
+git checkout -- path/to/file/to/revert (discard for a specific file)
 git merge <branch_name> (merge current branch in to another branch)
 git tag (show tags)
 git tag <tag-name> (tag current commit with new tag)
-git push origin <tag-name> (push commit with tag)
+git push origin <tag-name> (Push the tag to the remote origin)
+
+git push origin :refs/tags/<tagname> (Delete the tag on any remote before you push)
+git tag -fa <tagname> (Replace the tag to reference the most recent commit)
+
 
 git config --global user.name <Your Name> (set up your name)
 git config --global user.email <your_email@whatever.com> (set up your e-mail)
@@ -593,11 +691,13 @@ rsync -a --delete --quiet -e ssh /folder/to/backup user@host:/location/of/backup
 rsync -r --progress source destination (transferring and synchronizing local files, -r -recursive)
 rsync -av --progress --delete source destination (sync the contents of source to destination on the same system)
 rsync -ve ssh source user@host:destination (transferring and synchronizing remote files, -u - ignore same files)
-rsync -avHe ssh user@server:/path/to/file /home/user/path/to/file (download from a server)
-rsync -avH --progress /home/user/path/to/file -e ssh user@server:/path/to/file (upload to a server)
+rsync --progress -avHXAe ssh user@server:/path/to/file /home/user/path/to/file (download from a server)
+rsync -avHXA --progress /home/user/path/to/file -e ssh user@server:/path/to/file (upload to a server)
 rsync -a --include '*/' --include '*.txt' --exclude '*' source/ target/  (Copy specific file type keeping the folder structure)
 
-rsync -arvH -e "ssh -p 2222" user@example.com:/files/ /local/files/ (connect to server though ssh on port 2222 and sync all files from /files/ to /local/files)
+rsync -avHe -e "ssh -p 2222" user@example.com:/files/ /local/files/ (connect to server though ssh on port 2222 and sync all files from /files/ to /local/files)
+rsync -e "ssh -p 12022 -o StrictHostKeyChecking=no" -avHe user@example.com:/files/ /local/files/ (same as above but with option StrictHostKeyChecking=no)
+rsync -Pav -e "ssh -i $HOME/.ssh/somekey" username@hostname:/from/dir/ /to/dir/ (download from a server using ssh key)
 -----------------------------------------------------------------------------------------
 gdb:
 gdb /path/to/file (start an app with debug)

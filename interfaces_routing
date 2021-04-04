@@ -46,9 +46,26 @@ iface eth1 inet static
   post-up ip rule add from 172.16.100.10/32 table mgmt
   post-up ip rule add to 172.16.100.10/32 table mgmt
 
+#Bridging:
+#Basically, bridging is plugging one computer into another computer that already has a connection to a larger network (like the internet) and letting the bridged computer use the networked computer’s connection.
+#Bridge interface(br0) will become your primary network interface for this machine, so if you have set up static IP on your router, you will need to reassign it to MAC of the br0 interface.
+
+#create simple bridge interface that will use dhcp
+auto br0
+iface br0 inet dhcp
+  bridge_ports eth0 eth1
+
+#manual bridge config
+iface br0 inet static
+    bridge_ports eth0 eth1
+        address 192.168.1.2
+        broadcast 192.168.1.255
+        netmask 255.255.255.0
+        gateway 192.168.1.1
+
 ----------------------------------------------------------------------------
-Ubuntu18.04:
-To go back to /network/interfaces file use "install ifupdown", and disable systemd-networkd.socket, instead enable "networking" service.
+Netplan in Ubuntu18.04 and above: (To go back to /network/interfaces file use "install ifupdown")
+Use "netplan apply" command to apply recent changes.
 
 /etc/netplan/01-netcfg.yaml or 50-cloud-init.yaml:
 network:
@@ -66,7 +83,28 @@ network:
       nameservers:
               addresses: [8.8.8.8, 8.8.4.4]
 
-Use "netplan apply" command to apply recent changes.
+#dhcp configured bridge
+  bridges:
+    br0:
+      dhcp4: true
+      dhcp6: true
+      interfaces: [enp42s0]
+
+#manual bridge config
+  bridges:
+  br0:
+    interfaces: [enp1s0]
+    addresses: [192.168.1.239/24]
+    gateway4: 192.168.2.1
+    mtu: 1500
+    nameservers:
+      addresses: [8.8.8.8]
+    parameters:
+      stp: true
+      forward-delay: 4
+    dhcp4: no
+    dhcp6: no
+
 -------------------------------------------------------------------------------
 RHEL/CentOS:
 /etc/sysconfig/network:

@@ -18,10 +18,25 @@ commands:
 terraform (By executing 'terraform' you should see standard help output)
 terraform --help <command> (get more informatin about this command)
 terraform init (Initialize the project directory with the configuration files. This will download the correct provider plug-ins for the project)
+
+terraform workspace list (list workspaces)
+terraform workspace select <workspacename> (select workspace)
+terraform workspace new  <workspacename> (create new workspace)
+
 terraform plan [options] [DIR] (Generates an execution plan for Terraform)
-terraform plan -out=planfile ("planfile" - zip archive that have inside tf-files, plan files and current tfstate)
+terraform plan -out=<planfile> ("planfile" - zip archive that have inside tf-files, plan files and current tfstate)
+terraform plan -var env=dev (Generates an execution plan for Terraform using a variables described in "variables.tf", and defined in "terraform.tfvars")
+
+terraform apply -var "env=dev" -auto-approve (apply plan with a variable and auto-approve all questions)
 
 
+terraform refresh -var env=dev (reconcile the state Terraform knows about with the real-world infrastructure, does not modify infrastructure, but does modify the state file)
+
+terraform state list (list all resources in the state file matching the given addresses. If no addresses are given, all resources are listed)
+
+terraform destroy (destroy all infrastructure)
+terraform destroy -target RESOURCE_TYPE.NAME (destroy some specific resource)
+terraform apply --target RESOURCE_TYPE.NAME -var "env=dev" -auto-approve (apply specific resource)
 ===================================================================================================
 AWS:
 
@@ -45,13 +60,6 @@ Environment variables
 Shared credentials file
 EC2 Role
 
-Static credentials can be provided by adding an access_key and secret_key in-line in the AWS provider block:
-######
-provider "aws" {
-  region     = "us-west-2"
-  access_key = "my-access-key"
-  secret_key = "my-secret-key"
-}
 ######
 You can provide your credentials via the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, environment variables, representing your AWS Access Key and AWS Secret Key, respectively. Note that setting your AWS credentials using either these (or legacy) environment variables will override the use of AWS_SHARED_CREDENTIALS_FILE and AWS_PROFILE. The AWS_DEFAULT_REGION and AWS_SESSION_TOKEN environment variables are also used, if applicable:
 ######

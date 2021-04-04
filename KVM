@@ -1,0 +1,85 @@
+KVM (for Kernel-based Virtual Machine) is a full virtualization solution for Linux on x86 hardware containing virtualization extensions (Intel VT or AMD-V).
+It consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+
+Using KVM, one can run multiple virtual machines running unmodified Linux or Windows images. Each virtual machine has private virtualized hardware: a network card, disk, graphics adapter, etc. 
+The userspace component of KVM is included in mainline QEMU.
+
+In the default configuration, the guest operating system will have access to network services, but will not be visible to other machines on the network.
+Bridged networking allows the virtual interfaces to connect to the outside network through the physical interface, making them appear as normal hosts to the rest of the network.
+Network bridging will not work when the physical network device (e.g., eth1) used for bridging is a wireless device (e.g., wlp5s0), as most wireless device drivers do not support bridging! 
+
+----------------------------------------------------------------------
+Installation:
+Packages: qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils libvirt-daemon-system libguestfs-tools genisoimage virtinst libosinfo-bin
+
+Add user to libvirt and kvm group:
+adduser $(id -un) libvirt && adduser $(id -un) kvm
+
+Create KVM VM:
+Example creating CentOS 7.x VM:
+virt-install \
+--virt-type=kvm \
+--name centos7 \
+--ram 2048 \
+--vcpus=2 \
+--os-variant=rhel7 \
+--virt-type=kvm \
+--hvm \
+--cdrom=/var/lib/libvirt/boot/CentOS-7-x86_64-DVD-1708.iso \
+--network=bridge=br0,model=virtio \
+--graphics vnc \
+--disk path=/var/lib/libvirt/images/centos7.qcow2,size=40,bus=virtio,format=qcow2
+
+------------------------------------------------------------
+Creating VM using virt-builder:
+virt-builder --list (list the virtual machine images available)
+virt-builder --notes debian-9 (additional notes about specific image)
+
+Create image using virt-builder:
+sudo virt-builder debian-9 \
+--size=80G \
+--format qcow2 -o /var/lib/libvirt/images/wemine-deb9-vm.qcow2 \
+--hostname wemine-deb9-vm \
+--network \
+--timezone Europe/Kiev
+
+Import image with virt-install command:
+sudo virt-install --import --name wemine-deb9-vm2 \
+--ram 16384 \
+--vcpu 20 \
+--disk path=/var/lib/libvirt/images/wemine-deb9-vm.qcow2,format=qcow2 \
+--os-variant debian9 \
+--network=bridge=br0,model=virtio \
+--noautoconsole
+
+# you also need to reconfigure ssh_server when you first time attach to VM to enable it:
+dpkg-reconfigure openssh-server
+--------------------------------------------------------
+KVM guest can’t access internet:
+Problem is that the default policy for the FORWARD chain in iptables was set to DROP.
+You need to add exception in iptables rules:
+iptables -I FORWARD -i br0 -o br0 -j ACCEPT (only if you use bridge interface for VM)
+iptables -I FORWARD -i virbr0 -o virbr0 -j ACCEPT (default VM interface)
+
+# In case, that the created interface in the vm, and the one described in "/etc/network/interfaces" have different names:
+sed -i 's/ens2/ens3/g' /etc/network/interfaces
+dhclient ens3
+---------------------------------------------------------------------
+Commands:
+virsh help console (show virsh-console commands and options)
+virsh list --all (list VMs)
+virsh start <vm-name> (Start a vm)
+virsh autostart <vm-name> (start vm at boot time)
+virsh shutdown <vm-name> (Shutodwn a vm)
+virsh destroy <vm-name> (force shut off a vm)
+virsh reboot <vm-name> (Reboot a vm)
+virsh console <vm-name> (connect the virtual machine)
+virsh undefine --domain <vm-name> (delete a VM Guest)
+virsh snapshot-list --domain <vm-name> (list snapshots of the vm)
+virsh snapshot-delete --domain <vm-name> --snapshotname <snapshot-name> (delete snapshot of specified vm)
+
+virsh dumpxml <vm-name> (some vm info)
+
+CTRL+Shift+] (exit a virsh console)
+ctrl+alt+6 (Same as above but for Apple macBook/computer)
+

@@ -33,6 +33,7 @@ location ~ \.php$ { try_files $uri =404;            # php files location
 }
 -------------------------------------------------------------------------------------------------------------------------
 location /static {                  # static files location
+    autoindex on/off;               # Enables or disables the directory listing output.
    try_files $uri $uri/ =404;
 }
 

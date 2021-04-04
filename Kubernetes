@@ -1,6 +1,8 @@
 Kubernetes - open-source container-orchestration system for automating application deployment, scaling, and management. It was originally designed by Google, and is now maintained by the Cloud Native Computing Foundation. It aims to provide a "platform for automating deployment, scaling, and operations of application containers across clusters of hosts". It works with a range of container tools, including Docker. Many cloud services offer a Kubernetes-based platform or infrastructure as a service (PaaS or IaaS) on which Kubernetes can be deployed as a platform-providing service.
 Kubernetes coordinates a highly available cluster of computers that are connected to work as a single unit. The abstractions in Kubernetes allow you to deploy containerized applications to a cluster without tying them specifically to individual machines.
 
+#Add the kubectl bash autocompletion
+kubectl completion bash >/etc/bash_completion.d/kubectl
 =============================================================================
 Commands:
 kubectl [command] [TYPE] [NAME] [flags]
@@ -12,29 +14,58 @@ kubectl [command] [TYPE] [NAME] [flags]
 
 kubectl config view (show kubernates info about clasters)
 kubectl cluster-info (Display endpoint information about the master and services in the cluster)
+kubectl get namespaces -A (show namespaces)
 kubectl get services -A (List all services in the namespace)
-kubectl describe service -n <namespace> <servicename> (service info)
 kubectl get service -n <namespace> <servicename> -o json/yaml (service info in json/yaml format)
 kubectl get ingress -A (show ingress)
 kubectl get endpoints -A (show endpoints)
 kubectl get nodes (list all nodes in claster)
-kubectl describe node <nodename> (node info)
 kubectl get pods -A (get all pods in current namespace)
+kubectl get deployments -A (get all deployments in current namespace)
 kubectl get pods -o wide -n <namespace> (List all pods in the namespace, with more details)
 kubectl create -f /path/to/.yaml (Create one or more resources from a file)
 kubectl apply -f /path/to/.yaml (Create a resources using the definition in a .yaml config)
 kubectl apply -f <namespace> -R (recursively apply new eviroment using all files in enviroment directory)
 kubectl delete -f /path/to/.yaml (Delete resources specified in a .yaml config)
-kubectl delete pods -n <namespace> <pod name> (delete and recreate pod)
-kubectl delete -f <namespace> -R (recursively delete enviroment)
-kubectl describe pod -n <namespace> <pod name> (get pod details)
-kubectl logs -n <namespace> <pod name> (get pod logs if eny present)
-kubectl exec -it -n <namespace> <pod name> bash (exec bash in pod)
-kubectl port-forward -n <namespace> <pod name> 5432:5432 (port forvard from system to pod)
-kubectl get configmap <some file> -o yaml > <configname>.yaml (create confignmap from file)
+kubectl delete pods -n <namespace> <podname> (delete and recreate pod)
+kubectl delete statefulset  <namespace> <statefulsetname> (delete statefulset and its pods)
+kubectl delete -f <namespace> -R (recursively delete environment)
+kubectl delete pod <PODNAME> --grace-period=0 --force --namespace <NAMESPACE> (delete the POD forcefully)
+kubectl logs -n <namespace> <podname>  -c <container> (get pod logs if any present, -c in multi-container case)
+kubectl logs --follow(-f) <namespace> <podname> (follow pod logs)
+kubectl exec -it -n <namespace> <podname> -- bash (exec bash in pod)
+kubectl exec -n <namespace> <podname> -- bash -c "<command>" (execute command in pod)
+kubectl port-forward -n <namespace> <podname> 5432:5432 (port forvard from system to pod)
+kubectl get configmaps -A (show configmaps)
+kubectl get pv (show Persistent Volume Claims)
+kubectl get pvc -n <namespace> (show Persistent Volumes)
+kubectl get sc -n <namespace> (show storage classes)
+kubectl delete pvc <claimname> (delete the claim to release the volume)
+
+kubectl get <resource> -n <namespace> <resourcename> -o yaml (get yaml of specific resource)
+
+kubectl describe node <nodename> (node info)
+kubectl describe rc ${CONTROLLER_NAME} (introspect events related to the replication controller)
+kubectl describe pod/service/pvc/sc -n <namespace> <resourcename> (info about resource)
+
+kubectl rollout restart <resourcetype> -n <namespace> <resourcename> (reload resource)
+
+kubectl port-forward <pod-mame> 8200:8200 -n <namespace> (forward port from pod to localhost)
+
+kubectl cp /tmp/foo_dir <some-pod>:/tmp/bar_dir (Copy a local file to a remote Pod in a cluster)
+kubectl cp <some-pod>:/tmp/foo /tmp/bar (Copy a remote file from a Pod to a local file.)
 
 # for each service, for each port, if nodePort is defined, print nodePort
 kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{.}}{{"\n"}}{{end}}{{end}}{{end}}'
+
+# delete all evicted pods
+kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f -
+
+kubectl get pod -n qa-wemineos -l app=my-app -o jsonpath="{.items[0].metadata.name}" (get pod name using specified label)
+
+#sequentially delete pods
+for pod_id in $(kubectl get pods -n $NAMESPACE |grep $DEPLOY| grep -v Terminating |awk '{print $1}'); do \
+                                echo "Delete pod" $pod_id; kubectl delete pod $pod_id -n $NAMESPACE; sleep 5; done
 =============================================================================
 
 A Kubernetes cluster consists of two types of resources:
@@ -141,3 +172,41 @@ spec:
         - key: redis-config
           path: redis.conf
 ---------------------------------------------------------------------------------------------------------------------
+Minikube:
+minikube is local Kubernetes, focusing on making it easy to learn and develop for Kubernetes.
+All you need is Docker (or similarly compatible) container or a Virtual Machine environment, and Kubernetes is a single command.
+Features that require multiple nodes will not work in Minikube.
+
+Installation(deb):
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+sudo dpkg -i minikube_latest_amd64.deb
+
+If you create bare-metal claster with "minikube start --driver=none"? then you should run all commans with "sudo" 
+
+Commands:
+minikube start --help
+minikube start (create the claster)
+minikube start -p cluster2 (Start a second local cluster, will not work if minikube is using the bare-metal/none driver)
+minikube start --extra-config=kubelet.MaxPods=5 (configure the Kubernetes components with arbitrary values)
+minikube start --driver=docker --alsologtostderr -v=1 (Start a cluster using the docker driver, extra debugging information)
+minikube pause (Pause Kubernetes without impacting deployed applications)
+minikube stop (Halt the cluster)
+minikube delete (Delete local minikube clusters)
+minikube status (Gets the status of a local Kubernetes cluster)
+
+minikube config view (Display values currently set in the minikube config file)
+minikube config set <option> <key> (modifies minikube config files) 
+minikube addons list (easily installed Kubernetes services)
+minikube addons enable <addon> (Install minikube addon)
+minikube update-context (Update kubeconfig in case of an IP or port change)
+minikube ip (show minikube ip)
+
+minikube dashboard (web-based Kubernetes user interface)
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml (Deploying the Dashboard UI)
+
+kubectl config use-context minikube (context contains the configuration to communicate with your Minikube cluster)
+kubectl get pods --context=minikube
+minikube service [-n NAMESPACE] [--url] SERVICE (Service exposed via a node port)
+minikube service list (Lists the URLs for the services in your local cluster)
+
+minikube logs (Returns logs to debug a local Kubernetes cluster)

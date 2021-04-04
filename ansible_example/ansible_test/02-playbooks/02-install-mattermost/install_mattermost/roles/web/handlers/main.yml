@@ -1,9 +1,0 @@
----
-- name: reload nginx
-  service: name=nginx state=reloaded
-
-- name: reload systemd
-  command: systemctl daemon-reload
-
-- name: restart mattermost
-  service: name=mattermost state=restarted
