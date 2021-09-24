@@ -96,7 +96,6 @@ ulimit -a, ulimit -Hn, ulimit -Sn (show limits)
 split -d -l 200 httpd.log log (split the file into multiple pieces, -l number of lines, prefix named 'log' and add numbers to the suffix using the option -d)
 
 ls -l /proc/<PID>/fd/ (process opened file descriptors)
-:q!
 echo 3 > /proc/sys/vm/drop_caches (clear the buffer-cache)
 
 sysbench cpu --threads=2 run (cpu perfomance benchmark)
@@ -161,12 +160,13 @@ awk '/32 host/ { print f } {f=$2}' <<< "$(</proc/net/fib_trie)" (addresses of al
 # To determine the adapter of those addresses (a) consult the adapters' destination networks from /proc/net/route, (b) match those networks with the ones of /proc/net/fib_trie and (c) print the corresponding /32 host addresses listed under those networks
 -----------------------------------------------------------------------------------------
 zip:
-zip -r music /home/yourname/music/ (create archive)
+zip -r archivename.zip /path/to/folder/ (create archive)
 # to add new files to an existing archive or update the files in an archive, use the same name for the archive file when running the zip command
-zip myfilename.zip -r /home/wikileaks -e (encrypt archive)
+zip myfilename.zip -r /home/wikileaks -e ( -e encrypt archive)
 zip zipfilename -d [name of file in archive] (delete files from a zipped archive)
 unzip -l test.zip (show zip archive content)
 unzip test.zip (decompress archive)
+unzip < file.gz > file ()
 gzip -dc < file.gz > /somewhere/file (decompress a .gz file to specific directory)
 
 tar:
@@ -175,6 +175,12 @@ tar -zxvf archive.tar.gz (decompress archive(x - extract))
 tar -C /myfolder -zxvf archive.tar.gz (extract to another directory)
 tar tvf archive.tar (view an existing tar archive)
 tar xf archive.tgz filename (extract specific file)
+
+Gzip:
+gzip file (create .gz archive)
+gzip -d file.gz (decompress .gz archive)
+gunzip file.gz (decompress .gz archive)
+gunzip -k file.gz (decompress .gz archive. -k - Keep(don't delete) input files during compression or decompression)
 -------------------------------------------------------------------------------------
 usermod:
 usermod -a -G groupname username (add a user in a new group, -a - append)
@@ -448,6 +454,8 @@ systemctl list-dependencies servicename.service (unit’s dependency tree)
 systemctl list-dependencies --all servicename.service (recursively list all dependencies)
 systemctl link /path/to/servicename.service (create symbolic link from one of the systemd services)
 systemctl -r --type service --all
+systemctl --failed (List failed units)
+systemctl status pid (Show the cgroup slice, memory and parent for a PID)
 
 systemctl --user (for user-space services)
 
@@ -693,6 +701,7 @@ readlink /proc/*/task/*/ns/* | sort -u (list of currently presented namespaces i
 unshare -u /bin/bash (create a shell in new UTS namespace)
 ----------------------------------------------------------------------------------------
 rsync:
+rsync -avh --progress /path/to/source /path/to/destination (copy file or folder)
 rsync -a --delete --quiet /folder/to/backup /location/of/backup (-a - archived and syncs recursively)
 rsync -a --delete local-file user@remote-host:remote-file (--delete - delete from destination if removed from source)
 rsync -a --exclude=pattern_to_exclude user@remote-host:remote-file local-file
