@@ -129,6 +129,8 @@ All, in all, the files in /proc will provide all information about a program:
 'task/[tid]' contain corresponding information about each of the threads in the process
 'status' different process info: state, PPid, number of Threads.
 /proc/sys/ (system configuration information and interfaces)
+/proc/net/route (network adapters)
+/proc/net/fib_trie (holds the network topography)
 
 namespaces - partitions kernel resources such that one set of processes sees one set of resources while another set of processes sees a different set of resources.
 Makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. 
@@ -324,9 +326,6 @@ NetworkManager - program for providing detection and configuration for systems t
 nmcli connection reload (should be run after changes to connection config file)
 /etc/NetworkManager/NetworkManager.conf (global configuration file, can be used to set DNS)
 /etc/NetworkManager/dispatcher.d/
-
-Samba - re-implementation of the SMB networking protocol.
-/etc/samba/smb.conf (Samba configuration file)
 
 PAM - Pluggable Authentication Modules, provide a framework for system-wide user authentication.
 PAM provides a way to develop programs that are independent of authentication scheme. 

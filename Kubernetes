@@ -12,6 +12,7 @@ kubectl [command] [TYPE] [NAME] [flags]
 # flags: Specifies optional flags. For example, you can use the -s or --server flags to specify the address and port of the Kubernetes API server.
 # To specify multiple resource types individually: TYPE1/name1 TYPE1/name2 TYPE2/name3 TYPE<#>/name<#>
 
+kubectl --insecure-skip-tls-verify=true get <something> -A (skip tls)
 kubectl config view (show kubernates info about clasters)
 kubectl cluster-info (Display endpoint information about the master and services in the cluster)
 kubectl get namespaces -A (show namespaces)
@@ -35,6 +36,7 @@ kubectl logs -n <namespace> <podname>  -c <container> (get pod logs if any prese
 kubectl logs --follow(-f) <namespace> <podname> (follow pod logs)
 kubectl exec -it -n <namespace> <podname> -- bash (exec bash in pod)
 kubectl exec -n <namespace> <podname> -- bash -c "<command>" (execute command in pod)
+kubectl exec -it my-pod -c main-app -- /bin/bash (-c - container)
 kubectl port-forward -n <namespace> <podname> 5432:5432 (port forvard from system to pod)
 kubectl get configmaps -A (show configmaps)
 kubectl get pv (show Persistent Volume Claims)

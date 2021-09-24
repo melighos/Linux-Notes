@@ -147,6 +147,7 @@ vipw (used to manually add an entry of user details in /etc/passwd)
 vigr (used to manually create a group for a user in /etc/group)
 unshare (run a program with some namespaces unshared from the parent, run program in a new set of namespaces)
 nsenter (run program with namespaces of other processes, allowing to enter into namespaces. )
+sysdig (powerful and flexible system monitoring, analysis and troubleshooting tool)
 
 Services:
 systemctl status,stop,start,restart,reload,disable,enable "service" (for systemd init)
