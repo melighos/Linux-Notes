@@ -104,6 +104,8 @@ sysdig -c spy_users (shows what command users executes)
 
 gpg --encrypt path/to/file
 gpg --decrypt -r melighos path/to/file.gpg > path/to/file
+
+date +"%Y-%m-%d %T" (get current Date and Time)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)

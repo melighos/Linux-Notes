@@ -43,6 +43,7 @@ kubectl get pv (show Persistent Volume Claims)
 kubectl get pvc -n <namespace> (show Persistent Volumes)
 kubectl get sc -n <namespace> (show storage classes)
 kubectl delete pvc <claimname> (delete the claim to release the volume)
+kubectl scale deployment --replicas=1 -n <namespace> <deployment> (change the number of replicas)
 
 kubectl get <resource> -n <namespace> <resourcename> -o yaml (get yaml of specific resource)
 
