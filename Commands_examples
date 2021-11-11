@@ -28,16 +28,20 @@ sudo modprobe "i2c-i801"    # SMBus adapter name taken from lspci(PCI/SMBus)
 sudo i2cdetect -l
 decode-dimms
 --------------------------------------------------------------------------------------
-For open-source radeon and amdgpu driver:
-DRI_PRIME=1 %command% (VGA switch, make program use second GPU)
-
-GALLIUM_HUD="fps,GPU-load+cpu" (overlay with different information)
-GALLIUM_HUD=help glxgears (available options list)
-GALLIUM_HUD="fps,GPU-load+cpu,VRAM-usage,sensors_temp_cu-radeon-pci-0d00.temp1"
-
-GRUB_CMDLINE_LINUX_DEFAULT="radeon.cik_support=0 amdgpu.cik_support=1 radeon.si_support=0 amdgpu.si_support=1" (experimental amdgpu support)
-
+DRI_PRIME=1 %command% (VGA switch, make program use second GPU, radeon and amdgpu driver)
 export MESA_GL_VERSION_OVERRIDE=3.3COMPAT (overrides env variable for compatiblity OpenGL version)
+
+GALLIUM_HUD (The Gallium3D Heads-Up Display (HUD) for Mesa drivers)
+GALLIUM_HUD=help glxgears (available options list)
+GALLIUM_HUD=simple,fps (If 'simple' is the first argument passed, a much simpler and text-only HUD will be displayed)
+GALLIUM_HUD="fps,GPU-load,cpu,VRAM+VRAM-usage" (overlay GPU and CPU usage, fps, VRAM usage)
+GALLIUM_HUD="cpu0+cpu1+cpu2+cpu3+cpu4+cpu5+cpu6+cpu7+cpu8" (many things in the same graph area, like all the CPU threads)
+
+DXVK (DXVK Direct3D to Vulkan translation layer for Wine)
+DXVK_HUD=devinfo,fps,memory,gpuload,version
+
+VK_INSTANCE_LAYERS=VK_LAYER_MESA_overlay /path/to/vulkan_app (The Mesa Vulkan drivers have a built-in HUD overlay)
+VK_INSTANCE_LAYERS=VK_LAYER_MESA_overlay VK_LAYER_MESA_OVERLAY_CONFIG=help /path/to/vulkan_app (List the available statistics)
 ---------------------------------------------------------------------------------------
 LANGUAGE=ru_RU "program" (change LANGUAGE env. variable for specific program)
 LANG=ru_RU.UTF-8 "program" (change LANG env. variable for specific program)
@@ -480,6 +484,10 @@ timedatectl status (current timezone status)
 timedatectl set-timezone 'zone' (set timezone for systemd)
 timedatectl set-time “13:50:00” (manually set time)
 timedatectl set-ntp true (enable network clock synchronizetion)
+
+#limit journalctl size
+#/etc/systemd/journald.conf
+#SystemMaxUse=50M
 -----------------------------------------------------------------------------------------
 Nmap:
 nmap -PO (-sP, -sn, -sL) 10.0.0.0/24 (host discovery)
