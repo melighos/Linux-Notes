@@ -8,7 +8,7 @@ ctrl-u (cut all behind cursor)
 ctrl-y (past)
 ctrl + alt + - (undo)
 ctrl-x-e (continue editing your current shell line in a text editor (uses $EDITOR))
-alt-.  (paste previous command's argument)
+alt-.  (paste previous commands argument)
 !$     (last argument in last command)
 !WORD  (last command starting with WORD)
 Ctrl+z (suspend and move process to background)
@@ -34,7 +34,7 @@ export MESA_GL_VERSION_OVERRIDE=3.3COMPAT (overrides env variable for compatibli
 GALLIUM_HUD (The Gallium3D Heads-Up Display (HUD) for Mesa drivers)
 GALLIUM_HUD=help glxgears (available options list)
 GALLIUM_HUD=simple,fps (If 'simple' is the first argument passed, a much simpler and text-only HUD will be displayed)
-GALLIUM_HUD="fps,GPU-load,cpu,VRAM+VRAM-usage" (overlay GPU and CPU usage, fps, VRAM usage)
+GALLIUM_HUD="fps,GPU-load,cpu,temperature,VRAM-usage" (overlay GPU and CPU usage, fps, VRAM usage)
 GALLIUM_HUD="cpu0+cpu1+cpu2+cpu3+cpu4+cpu5+cpu6+cpu7+cpu8" (many things in the same graph area, like all the CPU threads)
 
 DXVK (DXVK Direct3D to Vulkan translation layer for Wine)
@@ -110,6 +110,7 @@ gpg --encrypt path/to/file
 gpg --decrypt -r melighos path/to/file.gpg > path/to/file
 
 date +"%Y-%m-%d %T" (get current Date and Time)
+diff -q directory-1/ directory-2/ (Difference Between Two Directories)
 ---------------------------------------------------------------------------------------
 sudo growpart /dev/sda 2 (add free space to partition in virtual machine)
 sudo resize2fs /dev/sda2 (resize partition)
@@ -141,7 +142,7 @@ pg_isready -d wemineos -h <database-ip> -p 5432 -U postgres
 network:
 netstat -on | grep TIME_WAIT (timers on the timewait for each socket)
 
-ip route add 192.168.200.0/24 via 127.0.0.1 (block IPs by null-routing, won't protect against most UDP attacks, packets from the remoute do reach the system)
+ip route add 192.168.200.0/24 via 127.0.0.1 (block IPs by null-routing, wont protect against most UDP attacks, packets from the remoute do reach the system)
 ip route add blackhole 192.168.0.195/32 (same as above)
 ip route flush cache (flush route cache to get the new routing rules to be used)
 
@@ -186,7 +187,7 @@ Gzip:
 gzip file (create .gz archive)
 gzip -d file.gz (decompress .gz archive)
 gunzip file.gz (decompress .gz archive)
-gunzip -k file.gz (decompress .gz archive. -k - Keep(don't delete) input files during compression or decompression)
+gunzip -k file.gz (decompress .gz archive. -k - Keep(dont delete) input files during compression or decompression)
 -------------------------------------------------------------------------------------
 usermod:
 usermod -a -G groupname username (add a user in a new group, -a - append)
@@ -229,7 +230,7 @@ ps -ft <tty> (get PID of opened tty connection)
 -----------------------------------------------------------
 kill:
 kill -15 `lsof -t -u USER` (terminate all the processes of a specific user)
-kill -s SIGCHLD [parent's pid] (ask the parent to kill its zombie child)
+kill -s SIGCHLD [parents pid] (ask the parent to kill its zombie child)
 ------------------------------------------------------------------------------------------
 pacmd list-sources | grep -e 'index:' -e device.string -e 'name:' (List available input sources)
 pacmd list-sinks | grep -e 'name:' -e 'index:' (list available output sinks)
@@ -260,7 +261,7 @@ chmod 700 /root/private
 mount /dev/sdb1 /root/private/alice_disk
 bindfs --map=1000/1001:1001/1000:@1000/1001:@1001/1000 /root/private/alice_disk /media/alice_disk
 
-mount another user's folder and files as my own ,transformations of ownership and permissions:
+mount another users folder and files as my own ,transformations of ownership and permissions:
 bindfs -u cqqrstoo ~bob/stuff ~cqqrstoo/bobs-stuff
 # In /etc/fstab, that would translate to:
 bindfs#/home/bob/stuff /home/cqqrstoo/bobs-stuff fuse force-user=cqqrstoo 0 0
@@ -332,7 +333,7 @@ yum update --exclude=PACKAGENAME (skip installing or updating package)
 yum --showduplicates list package-name (show available versions of specific package)
 yum update-to package-version (update or install package to specific version)
 yum list installed (list all installed packages)
-yum list installed package-name (show if package installed and it's version)
+yum list installed package-name (show if package installed and its version)
 yum list package-name (search for package)
 yum search package-name (search for package)
 yum info package-name (show detailed info about package)
@@ -363,7 +364,7 @@ find . -type f -name "*.txt" -exec sed -i'' -e 's/old/new/g' {} + (replace every
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/old/new/g' (same but different method)
 
 find . -type f -printf '%s %p\n'| sort -nr (List of files sorted by size)(| head -10 - can be added optionally to cut output)
-find \( ! -uid `id -u` \) -o \( ! -gid `id -g` \) (find folders and files you don't own)
+find \( ! -uid `id -u` \) -o \( ! -gid `id -g` \) (find folders and files you dont own)
 
 find . -iname "*_b.wav" -exec rename 's/_b.wav/.wav/' '{}' \; (rename files recursively, -iname - case in-sensitive)
 
@@ -394,7 +395,7 @@ sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' f
 # 'ta' If the last substitution command resulted in a change, jumps back to label 'a' to try again, the code keeps looking for duplicates until none remain
 # 's/(, )+/, /g; s/, *$//' These two substitution commands clean up any left over comma-space combinations
 
-sed -n -e '10,100p' input.txt > output.txt (-n don't print each line, -e execute as a sed script, starting on line 10, until line 100 (inclusive), print (p) that line)
+sed -n -e '10,100p' input.txt > output.txt (-n dont print each line, -e execute as a sed script, starting on line 10, until line 100 (inclusive), print (p) that line)
 
 #<fig><image href="NEW_VALUE" align="left" placement="break"
 sed 's/\(.*image href=\)[^ ]*\( .*\)/\1"NEW_VALUE"\2/' (replace the value in the first set of quotes, keeping the remainder of the line the same)
@@ -507,7 +508,7 @@ nmap -sA [target] (send the ACK packets rather than the SYN packets, firewalls t
 ---------------------------------------------------------------------------------------
 lsof:
 lsof -i :'port/tcp/udp' (which process is listening on port or protocol)
-lsof -i -P -n (established connections, ports in use, -n - don't resolve addresses)
+lsof -i -P -n (established connections, ports in use, -n - dont resolve addresses)
 lsof -p [PID] -R (opened files based on process PID, -R - show PPID)
 lsof -u USER (list files opened by processes belonging to a specific user)
 lsof -t filename (list IDs of processes that have opened a particular file)
@@ -531,7 +532,7 @@ nmcli connection edit 'Wired connection 2' (nmcli interactive editor to edit a c
 ------------------------------------------------------------------------------------
 tcpdump:
 tcpdump -D (real and virtual interfaces)
-tcpdump -i "interface" -nnvvS (network activity monitoring(-nn - Don't resolve hostnames or port names,-S - absolute-tcp-sequence-numbers))
+tcpdump -i "interface" -nnvvS (network activity monitoring(-nn - Dont resolve hostnames or port names,-S - absolute-tcp-sequence-numbers))
 tcpdump -i "interface" -vvnne (-e - show any link layer information)
 tcpdump -i "interface" -vvnn host IP_ADDR (capture all traffic to and from specific host)
 tcpdump -i "interface" -vvnn net 10.0 (capture from a specific subnet, aka 10.0.x.x)
@@ -602,14 +603,14 @@ ssh -R 80:localhost:80 tinyserver (connection made to the port 80 of tinyserver 
 
 ssh -g -L 9000:localhost:3000 user@example.com (remote forwarding followed by a local forwarding, but from the remote server. -g allows remote hosts to connect to local forwarded ports and this will make loopback port 3000 on the server accessible on all interfaces on port 9000)
 
-ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - don't login, -D - Dynamic port forwarding allows communication across a range of ports. This makes SSH acts as a SOCKS proxy server. A SOCKS proxy is a simple SSH tunnel in which specific applications forward their traffic through the tunnel to the remote server, then the proxy forwards the traffic out to the general internet. Has to be configured for each application separately on the client machine.
+ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - dont login, -D - Dynamic port forwarding allows communication across a range of ports. This makes SSH acts as a SOCKS proxy server. A SOCKS proxy is a simple SSH tunnel in which specific applications forward their traffic through the tunnel to the remote server, then the proxy forwards the traffic out to the general internet. Has to be configured for each application separately on the client machine.
 
 ssh -D 9000 -f -C -q -N user@host (-D create a SOCKS tunnel on the the port 9000, -C compresses, -q enables quiet mode, -f forks the process to the background)
 ssh -f -T -N -L 5000:localhost:3306 user@host -p 1022 -i ~/.ssh/id_rsa (-T disable pseudo-terminal allocation, -p port, -i different private keys)
 
 ssh user@host 'COMMAND1; COMMAND2; COMMAND3' (run multiple command on a remote host over ssh)
 ssh user@host 'bash -s' < SCRIPT (Run Bash Script on Remote Server)
-ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.txt (Don't check host identity, run command on remote host and redirect its output to file on local host)
+ssh -o StrictHostKeyChecking=no user@host -i ~/.ssh/id_rsa "command" > ./test.txt (Dont check host identity, run command on remote host and redirect its output to file on local host)
 ssh -o ConnectTimeout=10 user@host (set connection timeout)
 
 ssh-keygen -t rsa -b 4096 (create 4096-bit RSA key pair, default is 2048-bit)
