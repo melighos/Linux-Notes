@@ -37,6 +37,7 @@ docker run -it -p 8545:8545 -p 30303:30303 -v $PWD:/root/.ethereum ethereum/clie
 docker run --network=host --rm -ti ubuntu /bin/bash (host - use host network)
 docker run -d -t -i -e REDIS_NAMESPACE='staging' -name container_name dockerhub_id/image_name (-e pass environment variables)
 docker run -it --rm --cap-add=NET_ADMIN --device=/dev/net/tun --name=<contname> <image-name> (device=/dev/net/tun - create device, cap-add - add capabilities)
+docker run --entrypoint "" (overide entrypoint)
 
 docker-enter <container-id|container-name> (get a shell inside the container)
 docker-enter <container-id|container-name> df -h (run commands in container)
@@ -64,9 +65,12 @@ docker image command:
 docker image ls -a (show all local images)
 docker rmi -f <image id>
 docker build --tag <image name> . (build docker image in current directory)
-dockr build -t <name> -f ./.dockerfile . (-t tag, -f specify docker file to use)
+docker build -t <name> -f ./.dockerfile . (-t tag, -f specify docker file to use)
 docker save <image-name> > <image-name>.tar (create a tarball of our local docker image)
 docker load -i <image-name>.tar (load image from a tarball)
+docker image tag server:latest myname/server:latest (retag image)
+docker push <image tag> (push image to remoute registry you are logged in)
+docker pull <image tag> (pull image from remoute registry)
 
 docker build --network=host -t wemine-kafka-producer:prod . (host - use host network)
 ----------------------------------------------------------------------

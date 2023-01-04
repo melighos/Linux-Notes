@@ -457,7 +457,7 @@ systemctl mask/unmask name.service (mark/unmark a unit as completely unstartable
 systemctl mask/unmask name.target (enable/disable target)
 systemctl cat servicename.service (display the unit file)
 systemctl edit --full servicename.service (edit the unit file)
-systemctl list-dependencies servicename.service (unit’s dependency tree)
+systemctl list-dependencies servicename.service (units dependency tree)
 systemctl list-dependencies --all servicename.service (recursively list all dependencies)
 systemctl link /path/to/servicename.service (create symbolic link from one of the systemd services)
 systemctl -r --type service --all
@@ -476,7 +476,8 @@ journalctl -p 3 (systemd journal, specified priority, 0 emerg, 1 alert , 2 crit,
 journalctl --list-boots (list known boots)
 journalctl -b 2 (systemd journal, boot selection, e.g. -2 shows two boots ago)
 journalctl --since "2015-01-10 17:15:00" --until "2015-01-11 03:00" (show messages in requested time limits)
-journalctl -u 'nginx.service' (log messages for specified service)
+journalctl -u 'name.service' (log messages for specified service)
+journalctl -n 500 --no-pager -u 'name.service' (only some specific number of lines and no pager)
 journalctl _PID=8088 (log entries that involve specified PID)
 journalctl _UID=x/_GID=x (log entries that involve specified user/group)
 journalctl /bin/bash (log entries that involve executable)
@@ -595,13 +596,14 @@ iptables -t raw -A PREROUTING -s 1.2.3.4 -j DROP (block traffic before routing)
 ssh:
 ssh-copy-id username@remote-server.org (automatically copy your public key to authorized_keys of specified server)
 
-ssh -L 1234:localhost:2812 User@remotehost (tunnel with ssh, forwards the local port 1234 to the remote port 2812. -L - local forwarding, forward all connection attempts on local port to remote port on the remote host, which can be reached from the remote host machine)
+ssh -L 1234:localhost:2812 user@remotehost (tunnel with ssh, forwards the local port 1234 to the remote port 2812. -L - local forwarding, forward all connection attempts on local port to remote port on the remote host, which can be reached from the remote host machine)
 ssh -L 80:localhost:80 SUPERSERVER (connection made to the local port 80 is to be forwarded to port 80 on SUPERSERVER)
 
-ssh -R 50505:localhost:22 User@remotehost (tunnel with ssh, forwards the remote port 50505 to the local port 22. -R - remote forwarding, forward all connection attempts to the remote port to local port on local host, which can be reached from your local machine)
-ssh -R 80:localhost:80 tinyserver (connection made to the port 80 of tinyserver is to be forwarded to port 80 on your local machine)
+ssh -R 50505:localhost:22 user@remotehost (tunnel with ssh, forwards the remote port 50505 to the local port 22. -R - remote forwarding, forward all connection attempts to the remote port to local port on local host, which can be reached from your local machine)
 
 ssh -g -L 9000:localhost:3000 user@example.com (remote forwarding followed by a local forwarding, but from the remote server. -g allows remote hosts to connect to local forwarded ports and this will make loopback port 3000 on the server accessible on all interfaces on port 9000)
+
+ssh -L 9000:127.0.0.1:9000 -t -i .ssh/key user@bastion-host ssh -i .ssh/key user@remotehost -L 9000:127.0.0.1:9000 (double port forward with bastion host using key)
 
 ssh -N -D 8080 user@host -p 80 (tunnel with ssh, -N - dont login, -D - Dynamic port forwarding allows communication across a range of ports. This makes SSH acts as a SOCKS proxy server. A SOCKS proxy is a simple SSH tunnel in which specific applications forward their traffic through the tunnel to the remote server, then the proxy forwards the traffic out to the general internet. Has to be configured for each application separately on the client machine.
 
@@ -659,6 +661,7 @@ git merge <branch_name> (merge some other branch in to the current branch)
 git tag (show tags)
 git tag <tag-name> (tag current commit with new tag)
 git push origin <tag-name> (Push the tag to the remote origin)
+git fetch
 
 git tag -d <tag-name> (delete local tag)
 git push origin :refs/tags/<tagname> (Delete the tag on any remote before you push)
@@ -669,6 +672,7 @@ git config --global user.name <Your Name> (set up your name)
 git config --global user.email <your_email@whatever.com> (set up your e-mail)
 git config --global diff.tool <Program Name> (set up your diff tool(git difftool))
 git config --global merge.tool <Program Name> (set up your merge tool(git mergetool))
+git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@git@github.com/".insteadOf "git@github.com:"
 
 git remote set-url origin git@github.com:username/repository.git (change git to use key authentication)
 git push --mirror https://github.com/exampleuser/new-repository.git (mirror current local repository to the remote new one)
@@ -759,6 +763,7 @@ strace -e race=desc -p <PID> (trace all file descriptor related system calls)
 strace -e trace=memory -p <PID> (trace all memory mapping related system calls)
 --------------------------------------------------------------------------------
 LVM:
+lvdisplay -v
 lvextend -L +500M /dev/vgroup/lvolume (extending the size of LVM partition by 500MB)
 lvextend -l +100%FREE /dev/vgroup/lvolume (extending all available free space)
 resize2fs /dev/vgroup/lvolume (to resize ext filesystems)

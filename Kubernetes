@@ -15,6 +15,7 @@ kubectl [command] [TYPE] [NAME] [flags]
 kubectl --insecure-skip-tls-verify=true get <something> -A (skip tls)
 kubectl config view (show kubernates info about clasters)
 kubectl cluster-info (Display endpoint information about the master and services in the cluster)
+
 kubectl get namespaces -A (show namespaces)
 kubectl get services -A (List all services in the namespace)
 kubectl get service -n <namespace> <servicename> -o json/yaml (service info in json/yaml format)
@@ -23,37 +24,42 @@ kubectl get endpoints -A (show endpoints)
 kubectl get nodes (list all nodes in claster)
 kubectl get pods -A (get all pods in current namespace)
 kubectl get deployments -A (get all deployments in current namespace)
+kubectl get configmaps -A (show configmaps)
 kubectl get pods -o wide -n <namespace> (List all pods in the namespace, with more details)
+kubectl get pv (show Persistent Volume Claims)
+kubectl get pvc -n <namespace> (show Persistent Volumes)
+kubectl get sc -n <namespace> (show storage classes)
+kubectl get <resource> -n <namespace> <resourcename> -o yaml (get yaml of specific resource)
+kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName=<node> (get all pods on a specific node)
+
 kubectl create -f /path/to/.yaml (Create one or more resources from a file)
 kubectl apply -f /path/to/.yaml (Create a resources using the definition in a .yaml config)
 kubectl apply -f <namespace> -R (recursively apply new eviroment using all files in enviroment directory)
+
 kubectl delete -f /path/to/.yaml (Delete resources specified in a .yaml config)
 kubectl delete pods -n <namespace> <podname> (delete and recreate pod)
 kubectl delete statefulset  <namespace> <statefulsetname> (delete statefulset and its pods)
 kubectl delete -f <namespace> -R (recursively delete environment)
 kubectl delete pod <PODNAME> --grace-period=0 --force --namespace <NAMESPACE> (delete the POD forcefully)
-kubectl logs -n <namespace> <podname>  -c <container> (get pod logs if any present, -c in multi-container case)
-kubectl logs --follow(-f) <namespace> <podname> (follow pod logs)
+kubectl delete pvc <claimname> (delete the claim to release the volume)
+
 kubectl exec -it -n <namespace> <podname> -- bash (exec bash in pod)
 kubectl exec -n <namespace> <podname> -- bash -c "<command>" (execute command in pod)
 kubectl exec -it my-pod -c main-app -- /bin/bash (-c - container)
-kubectl port-forward -n <namespace> <podname> 5432:5432 (port forvard from system to pod)
-kubectl get configmaps -A (show configmaps)
-kubectl get pv (show Persistent Volume Claims)
-kubectl get pvc -n <namespace> (show Persistent Volumes)
-kubectl get sc -n <namespace> (show storage classes)
-kubectl delete pvc <claimname> (delete the claim to release the volume)
+
+kubectl port-forward -n <namespace> svc/<service> 5432:5432 (forward port from pod to localhost)
+kubectl top pods -n <namespace> --containers --use-protocol-buffers (container CPU/Mem usege)
+
 kubectl scale deployment --replicas=1 -n <namespace> <deployment> (change the number of replicas)
 
-kubectl get <resource> -n <namespace> <resourcename> -o yaml (get yaml of specific resource)
+kubectl logs -n <namespace> <podname>  -c <container> (get pod logs if any present, -c in multi-container case)
+kubectl logs --follow(-f) <namespace> <podname> (follow pod logs)
 
 kubectl describe node <nodename> (node info)
 kubectl describe rc ${CONTROLLER_NAME} (introspect events related to the replication controller)
 kubectl describe pod/service/pvc/sc -n <namespace> <resourcename> (info about resource)
 
 kubectl rollout restart <resourcetype> -n <namespace> <resourcename> (reload resource)
-
-kubectl port-forward <pod-mame> 8200:8200 -n <namespace> (forward port from pod to localhost)
 
 kubectl cp /tmp/foo_dir <some-pod>:/tmp/bar_dir (Copy a local file to a remote Pod in a cluster)
 kubectl cp <some-pod>:/tmp/foo /tmp/bar (Copy a remote file from a Pod to a local file.)
@@ -64,7 +70,7 @@ kubectl get svc --all-namespaces -o go-template='{{range .items}}{{range.spec.po
 # delete all evicted pods
 kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f -
 
-kubectl get pod -n qa-wemineos -l app=my-app -o jsonpath="{.items[0].metadata.name}" (get pod name using specified label)
+kubectl get pod -n <namespace> -l app=my-app -o jsonpath="{.items[0].metadata.name}" (get pod name using specified label)
 
 #sequentially delete pods
 for pod_id in $(kubectl get pods -n $NAMESPACE |grep $DEPLOY| grep -v Terminating |awk '{print $1}'); do \
@@ -108,72 +114,6 @@ ConfigMaps allow you to decouple configuration artifacts from image content to k
 Deployment:
 The Deployment instructs Kubernetes how to create and update instances of your application. Once you've created a Deployment, the Kubernetes master schedules mentioned application instances onto individual Nodes in the cluster.
 Deployments represent a set of multiple, identical Pods with no unique identities. A Deployment runs multiple replicas of your application and automatically replaces any instances that fail or become unresponsive. In this way, Deployments help ensure that one or more instances of your application are available to serve user requests. Deployments are managed by the Kubernetes Deployment controller.
-
-Attach handlers to Container lifecycle events. Kubernetes supports the postStart and preStop events:
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-        lifecycle:
-      		postStart:									# Kubernetes sends the postStart event immediately after the Container is created
-        		exec:
-          		command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
-      		preStop:									# Kubernetes sends the preStop event immediately before the Container is terminated
-        		exec:
-          		command: ["/bin/sh","-c","nginx -s quit; while killall -0 nginx; do sleep 1; done"]
---------------------------------------------------------------------------------------------------------
-In the example, the config volume is mounted at /redis-master. It uses path to add the redis-config key to a file named redis.conf.
-The file path for the redis config, therefore, is /redis-master/redis.conf. This is where the image will look for the config file for the redis master.
-
-apiVersion: v1
-kind: Pod
-metadata:
-  name: redis
-spec:
-  containers:
-  - name: redis
-    image: redis:5.0.4
-    command:
-      - redis-server
-      - "/redis-master/redis.conf"
-    env:
-    - name: MASTER
-      value: "true"
-    ports:
-    - containerPort: 6379
-    resources:
-      limits:
-        cpu: "0.1"
-    volumeMounts:
-    - mountPath: /redis-master-data
-      name: data
-    - mountPath: /redis-master
-      name: config
-  volumes:
-    - name: data
-      emptyDir: {}
-    - name: config
-      configMap:
-        name: example-redis-config
-        items:
-        - key: redis-config
-          path: redis.conf
 ---------------------------------------------------------------------------------------------------------------------
 Minikube:
 minikube is local Kubernetes, focusing on making it easy to learn and develop for Kubernetes.
